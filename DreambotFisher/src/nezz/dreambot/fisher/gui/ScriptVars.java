@@ -1,8 +1,8 @@
 package nezz.dreambot.fisher.gui;
 
-import nezz.dreambot.fisher.enums.Fish;
+import org.dreambot.api.methods.container.impl.bank.BankLocation;
 
-import org.dreambot.api.methods.bank.BankLocation;
+import nezz.dreambot.fisher.enums.Fish;
 
 public class ScriptVars {
 	public Fish yourFish;

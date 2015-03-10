@@ -55,8 +55,8 @@ public class Hunter extends AbstractScript{
 		else{
 			amount = 5;
 		}
-		if(getInventory().getCount(sv.huntThis.getTrapName()) < amount){
-			amount = getInventory().getCount(sv.huntThis.getTrapName());
+		if(getInventory().count(sv.huntThis.getTrapName()) < amount){
+			amount = getInventory().count(sv.huntThis.getTrapName());
 		}
 		return amount;
 	}
@@ -184,7 +184,7 @@ public class Hunter extends AbstractScript{
 			else{
 				for(int i = 0; i < sv.huntThis.getDropItems().length; i++){
 					if(getInventory().contains(sv.huntThis.getDropItems()[i])){
-						getInventory().interactWithItem(sv.huntThis.getDropItems()[i], "Drop");
+						getInventory().interact(sv.huntThis.getDropItems()[i], "Drop");
 						sleep(Calculations.random(400,700));
 					}
 				}
@@ -234,16 +234,10 @@ public class Hunter extends AbstractScript{
 					}
 				}
 				else{
-					Item trap = getInventory().getItem(sv.huntThis.getTrapName());/*new Filter<Item>(){
-						public boolean match(Item i){
-							if(i == null || i.getName() == null || !i.getName().equals(sv.huntThis.getTrapName()))
-								return false;
-							return i.hasAction(sv.huntThis.getLayAction());
-						}
-					});*/
+					Item trap = getInventory().get(sv.huntThis.getTrapName());
 					if(trap != null){
 						if(getLocalPlayer().getTile().equals(nextPos)){
-							getInventory().interactWithItem(trap.getName(), sv.huntThis.getLayAction());
+							getInventory().interact(trap.getName(), sv.huntThis.getLayAction());
 							long t = System.currentTimeMillis();
 							while(System.currentTimeMillis() - t < 6000 && (!posContainsTrap(nextPos) || getLocalPlayer().getAnimation() != -1)){
 								sleep(30);
@@ -255,7 +249,7 @@ public class Hunter extends AbstractScript{
 			}
 			break;
 		case PICK_TRAP:
-			final GroundItem yourTrap = getGroundItems().getClosest(sv.huntThis.getTrapName());
+			final GroundItem yourTrap = getGroundItems().closest(sv.huntThis.getTrapName());
 			if(yourTrap != null){
 				yourTrap.interact("Take");
 				sleepUntil(new Condition(){

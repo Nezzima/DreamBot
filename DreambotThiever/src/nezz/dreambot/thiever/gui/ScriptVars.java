@@ -1,8 +1,9 @@
 package nezz.dreambot.thiever.gui;
 
+import org.dreambot.api.methods.container.impl.bank.BankLocation;
+
 import nezz.dreambot.thiever.enums.Thieving;
 
-import org.dreambot.api.methods.bank.BankLocation;
 
 public class ScriptVars {
 	public Thieving yourThieving;

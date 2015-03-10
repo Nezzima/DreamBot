@@ -79,7 +79,7 @@ public class Fletcher extends AbstractScript{
 		case BANK:
 			if(getBank().isOpen()){
 				if(getInventory().contains(sv.fletch.getName())){
-					getBank().deposit(sv.fletch.getName());
+					getBank().depositAll(sv.fletch.getName());
 					sleepUntil(new Condition(){
 						public boolean verify(){
 							return !getInventory().contains(sv.fletch.getName());
@@ -92,7 +92,7 @@ public class Fletcher extends AbstractScript{
 						log("Out of: " + sv.fletch.getLog());
 						return -1;
 					}
-					getBank().withdraw(sv.fletch.getLog());
+					getBank().withdrawAll(sv.fletch.getLog());
 					sleepUntil(new Condition(){
 						public boolean verify(){
 							return getInventory().contains(sv.fletch.getLog());
@@ -102,7 +102,7 @@ public class Fletcher extends AbstractScript{
 				}
 			}
 			else{
-				getBank().openNearestBank();
+				getBank().open();
 				sleepUntil(new Condition(){
 					public boolean verify(){
 						return getBank().isOpen();
@@ -115,7 +115,7 @@ public class Fletcher extends AbstractScript{
 			if(getInventory().isItemSelected()){
 				getMouse().click();
 			}
-			GameObject tree = getGameObjects().getClosest(sv.fletch.getTree());
+			GameObject tree = getGameObjects().closest(sv.fletch.getTree());
 			if(tree != null && tree.exists() && getLocalPlayer().getAnimation() == -1){
 				tree.interact("Chop down");
 				sleepUntil(new Condition(){
@@ -134,7 +134,7 @@ public class Fletcher extends AbstractScript{
 			for(int i = 0; i < 28; i++){
 				Item item = getInventory().getItemInSlot(i);
 				if(item != null && !item.getName().contains("axe") && !item.getName().equals("Knife")){
-					getInventory().interactWithSlot(i, "Drop");
+					getInventory().interact(i, "Drop");
 					sleep(100,300);
 				}
 			}
@@ -182,9 +182,9 @@ public class Fletcher extends AbstractScript{
 						returnThis = Calculations.random(300,600);
 					}
 					else{
-						getInventory().interactWithItem("Knife", "Use");
+						getInventory().interact("Knife", "Use");
 						sleep(345,654);
-						Rectangle r = getInventory().getSlotBounds(getInventory().getSlotForName(sv.fletch.getLog()));
+						Rectangle r = getInventory().slotBounds(getInventory().slot(sv.fletch.getLog()));
 						if(r != null){
 							getMouse().move(r.getLocation());
 							getMouse().click();

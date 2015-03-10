@@ -11,7 +11,8 @@ import nezz.dreambot.tools.PricedItem;
 import nezz.dreambot.tools.RunTimer;
 
 import org.dreambot.api.methods.Calculations;
-import org.dreambot.api.methods.bank.BankLocation;
+import org.dreambot.api.methods.container.impl.bank.BankLocation;
+import org.dreambot.api.methods.filter.Filter;
 import org.dreambot.api.methods.map.Area;
 import org.dreambot.api.methods.map.Tile;
 import org.dreambot.api.methods.skills.Skill;
@@ -20,7 +21,6 @@ import org.dreambot.api.script.AbstractScript;
 import org.dreambot.api.script.Category;
 import org.dreambot.api.script.ScriptManifest;
 import org.dreambot.api.utilities.impl.Condition;
-import org.dreambot.api.utilities.impl.Filter;
 import org.dreambot.api.wrappers.interactive.GameObject;
 import org.dreambot.api.wrappers.interactive.NPC;
 import org.dreambot.api.wrappers.interactive.Player;
@@ -62,7 +62,7 @@ public class Druids extends AbstractScript{
 				return false;
 			}
 			for(int i = 0; i < sv.loot.length; i++){
-				if(gi.getName().equals("Herb")){
+				if(gi.getName().contains("Grimy")){
 					for(int ii = 0; ii < sv.keepHerbs.length; ii++){
 						if(gi.getID() == sv.keepHerbs[ii])
 							return true;
@@ -85,7 +85,8 @@ public class Druids extends AbstractScript{
 			return getLocalPlayer().isInCombat();
 		}
 	};
-	Tile[] druidsToBank = new Tile[]{new Tile(2565,3356,0),new Tile(2567,3356,0),
+	private final Tile druidsTile = new Tile(2565,3356,0);
+	/*Tile[] druidsToBank = new Tile[]{new Tile(2565,3356,0),new Tile(2567,3356,0),
 			new Tile(2569,3356,0),new Tile(2570,3355,0),new Tile(2571,3354,0),
 			new Tile(2572,3353,0),new Tile(2573,3352,0),new Tile(2574,3351,0),
 			new Tile(2575,3350,0),new Tile(2577,3350,0),new Tile(2579,3350,0),
@@ -104,7 +105,7 @@ public class Druids extends AbstractScript{
 			new Tile(2613,3345,0),new Tile(2613,3343,0),new Tile(2613,3341,0),
 			new Tile(2614,3339,0),new Tile(2615,3338,0),new Tile(2599,3378,0),
 			new Tile(2615,3338,0),new Tile(2616,3337,0),new Tile(2616,3335,0),
-			new Tile(2617,3334,0)};
+			new Tile(2617,3334,0)};*/
 
 	Area druidArea = new Area(new Tile(2560,3358,0), new Tile(2564,3354,0));
 	List<PricedItem> lootTrack = new ArrayList<PricedItem>();
@@ -128,7 +129,7 @@ public class Druids extends AbstractScript{
 		}
 		else{
 			if(druidArea.contains(getLocalPlayer())){
-				GroundItem gi = getGroundItems().getClosest(itemFilter);
+				GroundItem gi = getGroundItems().closest(itemFilter);
 				if(gi != null && druidArea.contains(gi)){
 					return State.LOOT;
 				}
@@ -187,7 +188,7 @@ public class Druids extends AbstractScript{
 	
 	private boolean needItem(String name){
 		for(int i = 0; i < sv.loot.length; i++){
-			if(name.equalsIgnoreCase(sv.loot[i].toLowerCase())){
+			if(name.equalsIgnoreCase(sv.loot[i].toLowerCase()) || name.contains("Grimy")){
 				return true;
 			}
 		}
@@ -198,7 +199,7 @@ public class Druids extends AbstractScript{
 		for(int i = 0; i < 28; i++){
 			Item item = getInventory().getItemInSlot(i);
 			if(item != null && !item.getName().equals("") && !item.getName().equals("null")){
-				if(item.getName().equals("Herb") && !needHerb(item.getID())){
+				if(item.getName().contains("Grimy") && !needHerb(item.getID())){
 					return true;
 				}
 				else if(!needItem(item.getName()))
@@ -224,16 +225,16 @@ public class Druids extends AbstractScript{
 			for(int i = 0; i < 28; i++){
 				Item item = getInventory().getItemInSlot(i);
 				if(item != null){
-					if(item.getName().equals("Herb") && !needHerb(item.getID())){
+					if(item.getName().contains("Grimy") && !needHerb(item.getID())){
 						if(Herbs.getForUNGrimyID(item.getID()).canIdHerb(getSkills().getBoostedLevels(Skill.HERBLORE))){
-							getInventory().interactWithSlot(i, "Identify");
+							getInventory().interact(i, "Identify");
 							sleep(600,900);
 						}
-						getInventory().interactWithSlot(i, "Drop");
+						getInventory().interact(i, "Drop");
 						sleep(600,900);
 					}
 					else if(!needItem(item.getName())){
-						getInventory().interactWithSlot(i, "Drop");
+						getInventory().interact(i, "Drop");
 						sleep(600,900);
 					}
 				}
@@ -241,11 +242,11 @@ public class Druids extends AbstractScript{
 			break;
 		case BANK:
 			if(getBank().isOpen()){
-				getBank().depositAll();
+				getBank().depositAllItems();
 				sleepUntil(itemDeposited,1000);
 			}
 			else{
-				getBank().openBank(BankLocation.ARDOUGNE_EAST.getBankType());
+				getBank().open(BankLocation.ARDOUGNE_EAST);
 				sleepUntil(new Condition(){
 					public boolean verify(){
 						return getBank().isOpen();
@@ -254,7 +255,7 @@ public class Druids extends AbstractScript{
 			}
 			break;
 		case ATTACK:
-			NPC druid = getNpcs().getClosest(druidFilter);
+			NPC druid = getNpcs().closest(druidFilter);
 			if(druid != null){
 				if(!myPlayer.isInCombat()){
 					druid.interact("Attack");
@@ -271,13 +272,13 @@ public class Druids extends AbstractScript{
 		case LOOT:
 			if(myPlayer.isInCombat())
 				break;
-			final GroundItem gi = getGroundItems().getClosest(itemFilter);
+			final GroundItem gi = getGroundItems().closest(itemFilter);
 			if(gi != null && druidArea.contains(gi.getTile())){
 				gi.interact("Take");
-				if(getMouse().getLastCrosshairColor() == 2){
+				if(getMouse().getLastCrosshairColorID() == 2){
 					sleepUntil(new Condition(){
 						public boolean verify(){
-							GroundItem gi_ = getGroundItems().getClosest(new Filter<GroundItem>(){
+							GroundItem gi_ = getGroundItems().closest(new Filter<GroundItem>(){
 								public boolean match(GroundItem _gi){
 									if(_gi == null || _gi.getName() == null)
 										return false;
@@ -296,7 +297,7 @@ public class Druids extends AbstractScript{
 			break;
 		case WALK_TO_BANK:
 			if(druidArea.contains(getLocalPlayer())){
-				door = getGameObjects().getClosest("Door");
+				door = getGameObjects().closest("Door");
 				if(door != null){
 					door.interact("Open");
 					sleepUntil(new Condition(){
@@ -321,7 +322,7 @@ public class Druids extends AbstractScript{
 				},1200);
 			}
 			if(myPlayer.getTile().getY() > 9000){
-				GameObject ladder = getGameObjects().getClosest("Ladder");
+				GameObject ladder = getGameObjects().closest("Ladder");
 				if(ladder != null){
 					if(ladder.interact("Climb-up")){
 						sleepUntil(new Condition(){
@@ -338,8 +339,8 @@ public class Druids extends AbstractScript{
 				for(int i = 0; i < druidsToBank.length; i++){
 					bankToDruids[i] = druidsToBank[druidsToBank.length - 1 - i];
 				}*/
-				if(getLocalPlayer().distance(druidsToBank[0]) < 8){
-					door = getGameObjects().getClosest(11723);
+				if(getLocalPlayer().distance(druidsTile) < 8){
+					door = getGameObjects().closest(11723);
 					if(door != null){
 						door.interact("Pick-lock");
 						sleepUntil(new Condition(){
@@ -350,7 +351,7 @@ public class Druids extends AbstractScript{
 					}
 				}
 				else{
-					getWalking().walk(druidsToBank[0]);
+					getWalking().walk(druidsTile);
 					//getWalking().walkTilePath(bankToDruids, Calculations.random(10,15));
 				}
 			}

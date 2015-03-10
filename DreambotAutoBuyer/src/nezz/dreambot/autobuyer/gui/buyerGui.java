@@ -63,7 +63,7 @@ public class buyerGui extends JFrame {
 		txtShopName.setBounds(96, 36, 132, 20);
 		panel.add(txtShopName);
 		
-		JLabel lblShopName = new JLabel("Shop Name:");
+		JLabel lblShopName = new JLabel("Shop Identifier:");
 		lblShopName.setBounds(0, 38, 93, 14);
 		panel.add(lblShopName);
 		
@@ -95,7 +95,11 @@ public class buyerGui extends JFrame {
 		JButton btnNewButton = new JButton("Start!");
 		btnNewButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-				var.shopName = txtShopName.getText();
+				try{
+					var.shopId = Integer.parseInt(txtShopName.getText());
+				}catch(Exception e){
+					var.shopName = txtShopName.getText();
+				}
 				var.itemName = txtItemName.getText();
 				var.hopWorlds = chckbxHopWorlds.isSelected();
 				var.f2p = chckbxFpOnly.isSelected();

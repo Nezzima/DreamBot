@@ -84,7 +84,7 @@ public class AnvilSmith {
 	
 	public GameObject getAnvil(){
 		if(anvil == null || System.currentTimeMillis() - anvilUpdate > 5000){
-			anvil = ctx.getGameObjects().getClosest("Anvil");
+			anvil = ctx.getGameObjects().closest("Anvil");
 			if(anvil != null)
 				anvilUpdate = System.currentTimeMillis();
 		}

@@ -12,13 +12,13 @@ import javax.swing.DefaultComboBoxModel;
 import javax.swing.JCheckBox;
 import javax.swing.JButton;
 
+import org.dreambot.api.methods.container.impl.bank.BankLocation;
+
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
 import java.awt.Color;
 
 import nezz.dreambot.fisher.enums.Fish;
-
-import org.dreambot.api.methods.bank.BankLocation;
 
 public class fisherGui extends JFrame {
 

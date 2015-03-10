@@ -8,7 +8,7 @@ import nezz.dreambot.tools.PricedItem;
 import nezz.dreambot.tools.RunTimer;
 
 import org.dreambot.api.methods.Calculations;
-import org.dreambot.api.methods.shop.Shop;
+import org.dreambot.api.methods.container.impl.Shop;
 import org.dreambot.api.script.AbstractScript;
 import org.dreambot.api.script.Category;
 import org.dreambot.api.script.ScriptManifest;
@@ -94,7 +94,7 @@ public class PackBuyer extends AbstractScript{
 			break;
 		case BUY:
 			if(!s.isOpen()){
-				s.tryOpen();
+				s.open();
 				waitFor(new Condition(){
 					@Override
 					public boolean verify() {
@@ -102,10 +102,10 @@ public class PackBuyer extends AbstractScript{
 					}
 				},1500);
 			}
-			else if(s.validate()){
-				Item pack = s.getItemByName(sv.packName);
+			else{
+				Item pack = s.get(sv.packName);
 				if(pack != null && pack.getAmount() > sv.minAmt){
-					s.buy(pack, 10);
+					s.purchase(pack, 10);
 					waitFor(new Condition(){
 						public boolean verify(){
 							return getInventory().contains(sv.packName);
@@ -119,8 +119,7 @@ public class PackBuyer extends AbstractScript{
 						e.printStackTrace();
 					}
 				}
-				s.validate();
-				pack = s.getItemByName(sv.packName);
+				pack = s.get(sv.packName);
 				if(pack == null || pack.getAmount() <= sv.minAmt/2)
 					hopWorlds = true;
 			}
@@ -133,7 +132,7 @@ public class PackBuyer extends AbstractScript{
 				for(int i = 0; i < 28; i++){
 					Item it = getInventory().getItemInSlot(i);
 					if(it != null && it.getName().equals(sv.packName)){
-						getInventory().interactWithSlot(i, "Open");
+						getInventory().slotInteract(i, "Open");
 						try {
 							Thread.sleep(Calculations.random(100,150));
 						} catch (InterruptedException e) {

@@ -1,20 +1,22 @@
 package nezz.dreambot.scriptmain.autobuyer;
 
 import java.awt.Graphics;
+import java.util.List;
 
 import nezz.dreambot.autobuyer.gui.ScriptVars;
 import nezz.dreambot.autobuyer.gui.buyerGui;
 import nezz.dreambot.tools.PricedItem;
 
 import org.dreambot.api.methods.Calculations;
-import org.dreambot.api.methods.shop.Shop;
+import org.dreambot.api.methods.container.impl.Shop;
+import org.dreambot.api.methods.filter.Filter;
 import org.dreambot.api.methods.world.World;
 import org.dreambot.api.script.AbstractScript;
 import org.dreambot.api.script.Category;
 import org.dreambot.api.script.ScriptManifest;
 import org.dreambot.api.utilities.Timer;
 import org.dreambot.api.utilities.impl.Condition;
-import org.dreambot.api.utilities.impl.Filter;
+import org.dreambot.api.wrappers.interactive.NPC;
 import org.dreambot.api.wrappers.items.Item;
 
 @ScriptManifest(author = "Nezz", name = "DreamBot Auto Buyer", version = 0, category = Category.MONEYMAKING, description = "Buys any pack and opens it")
@@ -25,6 +27,19 @@ public class AutoBuyer extends AbstractScript{
 	State state;
 	boolean hoppingWorlds = false;
 	private long startGP = 0;
+	
+	Filter<NPC> shopFilter = new Filter<NPC>(){
+		public boolean match(NPC n){
+			if(n == null || !n.exists())
+				return false;
+			if(sv.shopId > 0 && n.getID() == sv.shopId){
+				return true;
+			}
+			if(!sv.shopName.equals("") && sv.shopName.equals(n.getName()))
+				return true;
+			return false;
+		}
+	};
 	
 	boolean started = false;
 	private enum State{
@@ -47,7 +62,7 @@ public class AutoBuyer extends AbstractScript{
 				e.printStackTrace();
 			}
 		}
-		startGP = getInventory().getCount("Coins");
+		startGP = getInventory().count("Coins");
 		sv.item = new PricedItem(sv.itemName, getClient().getMethodContext(), true);
 		timer = new Timer();
 		started = true;
@@ -89,10 +104,11 @@ public class AutoBuyer extends AbstractScript{
 			return Calculations.random(300,500);
 		}
 		//calculate gp used, if you don't have enough gold to go another minute kill script.
-		int gp = getInventory().getCount("Coins");
+		int gp = getInventory().count("Coins");
 		int gpPerMin = (timer.getHourlyRate((int)startGP - gp)/60)/6;
-		if(gp < gpPerMin && gpPerMin > 0){
+		if(gp > 0 && gp < gpPerMin && gpPerMin > 0){
 			log("You can't last another minute: " + gpPerMin);
+			log("Current gp: " + gp);
 			stop();
 			return -1;
 		}
@@ -158,7 +174,17 @@ public class AutoBuyer extends AbstractScript{
 			 */
 			//if shop isn't open, try to open it.
 			if(!s.isOpen()){
-				s.tryOpen();
+				NPC shopper = null;
+				List<NPC> npcs = getNpcs().all();
+				for(NPC n : npcs){
+					if(shopFilter.match(n)){
+						shopper = n;
+						break;
+					}
+				}
+				if(shopper != null){
+					shopper.interact("Trade");
+				}
 				//sleep until it's open.
 				sleepUntil(new Condition(){
 					@Override
@@ -167,10 +193,10 @@ public class AutoBuyer extends AbstractScript{
 					}
 				},Calculations.random(1500,2500));
 			}
-			else if(s.validate()){
+			else{
 				//validate will guarantee the items in the shop are updated.
 				//get the item from the shop
-				Item pack = s.getItemByName(sv.itemName);
+				Item pack = s.get(sv.itemName);
 				//calculate buy amount based on min amount and current item amount
 				int buyAmt = pack.getAmount() - sv.minAmt;
 				//if it's not null and the amount is greater than min amount, buy it.
@@ -182,12 +208,10 @@ public class AutoBuyer extends AbstractScript{
 						buyAmt++;
 					buyAmt = buyAmt*10;
 					//buy the item.
-					s.buy(pack, buyAmt);
+					s.purchase(pack, buyAmt);
 				}
-				//revalidate to update items again
-				s.validate();
 				//check if the item is null or the amount is less than your min amount.
-				pack = s.getItemByName(sv.itemName);
+				pack = s.get(sv.itemName);
 				if((pack == null || pack.getAmount() <= sv.minAmt) && sv.hopWorlds)
 					hoppingWorlds = true;
 				//sv.item.update();
@@ -202,7 +226,7 @@ public class AutoBuyer extends AbstractScript{
 	private int lastProfit = 0;
 	public int getProfit(){
 		//if you're not logged in or the item amount is 0, return lastProfit
-		if(!getClient().isLoggedIn() || getInventory().getCount(sv.item.getName()) <= 0){
+		if(!getClient().isLoggedIn() || getInventory().count(sv.item.getName()) <= 0 || getInventory().count("Coins") <= 0){
 			return lastProfit;
 		}
 		//if lastProfit is 0 or 600ms has passed since last update, update lastProfit
@@ -212,7 +236,7 @@ public class AutoBuyer extends AbstractScript{
 			//get current value of the items
 			int currValue = sv.item.getValue();
 			//get spent gold
-			int spent = (int)startGP - getInventory().getCount("Coins");
+			int spent = (int)startGP - getInventory().count("Coins");
 			//get profit
 			lastProfit = currValue - spent;
 			//update the timer

@@ -24,7 +24,7 @@ import nezz.dreambot.filemethods.FileMethods;
 import nezz.dreambot.scriptmain.powerminer.MineTask;
 
 import org.dreambot.api.methods.MethodContext;
-import org.dreambot.api.methods.bank.BankLocation;
+import org.dreambot.api.methods.container.impl.bank.BankLocation;
 import org.dreambot.api.methods.map.Tile;
 
 import javax.swing.DefaultListModel;

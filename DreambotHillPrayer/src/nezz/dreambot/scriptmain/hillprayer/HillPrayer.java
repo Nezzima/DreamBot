@@ -27,7 +27,7 @@ public class HillPrayer extends AbstractScript {
 			return State.SLEEP;
 		}
 		else{
-			GroundItem gi = getGroundItems().getClosest("Big bones", "Limpwurt root");
+			GroundItem gi = getGroundItems().closest("Big bones", "Limpwurt root");
 			if(gi != null){
 				return State.LOOT;
 			}
@@ -54,7 +54,7 @@ public class HillPrayer extends AbstractScript {
 		state = getState();
 		switch(state){
 		case BURY:
-			getInventory().interactWithItem("Big bones", "Bury");
+			getInventory().interact("Big bones", "Bury");
 			sleep(600,900);
 			break;
 		case KILL:
@@ -80,7 +80,7 @@ public class HillPrayer extends AbstractScript {
 			}
 			break;
 		case LOOT:
-			GroundItem gi = getGroundItems().getClosest("Big bones", "Limpwurt root");
+			GroundItem gi = getGroundItems().closest("Big bones", "Limpwurt root");
 			if(gi != null){
 				if(gi.isOnScreen()){
 					gi.interact("Take");

@@ -4,7 +4,7 @@ import nezz.dreambot.herblore.gui.ScriptVars;
 import nezz.dreambot.tools.PricedItem;
 
 import org.dreambot.api.methods.MethodProvider;
-import org.dreambot.api.methods.bank.Bank;
+import org.dreambot.api.methods.container.impl.bank.Bank;
 import org.dreambot.api.methods.widget.Widget;
 import org.dreambot.api.script.AbstractScript;
 import org.dreambot.api.utilities.impl.Condition;
@@ -73,12 +73,12 @@ public class Potions extends States{
 			}
 			else{
 				if(!as.getInventory().isItemSelected()){
-					as.getInventory().interactWithItem(sv.yourPot.getIngredientTwo(), "Use");
+					as.getInventory().interact(sv.yourPot.getIngredientTwo(), "Use");
 					returnThis = 400;
 					wasAnimating = false;
 				}
 				else{
-					as.getInventory().interactWithItem(sv.yourPot.getUnfName(), "Use");
+					as.getInventory().interact(sv.yourPot.getUnfName(), "Use");
 					MethodProvider.sleepUntil(makePot,2000);
 					returnThis = 400;
 					Widget par = as.getWidgets().getWidget(309);
@@ -141,12 +141,12 @@ public class Potions extends States{
 			}
 			else{
 				if(!as.getInventory().isItemSelected()){
-					as.getInventory().interactWithItem(sv.yourPot.getIngredientOne(), "Use");
+					as.getInventory().interact(sv.yourPot.getIngredientOne(), "Use");
 					returnThis = 400;
 					wasAnimating = false;
 				}
 				else{
-					as.getInventory().interactWithItem("Vial of water", "Use");
+					as.getInventory().interact("Vial of water", "Use");
 					MethodProvider.sleepUntil(makePot,2000);
 					returnThis = 400;
 					Widget par = as.getWidgets().getWidget(309);
@@ -182,7 +182,7 @@ public class Potions extends States{
 			Bank bank = as.getBank();
 			if(bank.isOpen()){
 				if(as.getInventory().contains(sv.yourPot.getName() + "(3)")){
-					bank.depositAll();
+					bank.depositAllItems();
 					MethodProvider.sleepUntil(new Condition(){
 						public boolean verify(){
 							return as.getInventory().isEmpty();
@@ -205,7 +205,7 @@ public class Potions extends States{
 					}
 					else if(as.getInventory().contains(sv.yourPot.getIngredientOne())){
 						if(bank.contains("Vial of water")){
-							bank.withdraw("Vial of water");
+							bank.withdrawAll("Vial of water");
 							returnThis = 600;
 						}
 						else
@@ -213,7 +213,7 @@ public class Potions extends States{
 					}
 					else if(as.getInventory().contains(sv.yourPot.getUnfName())){
 						if(!as.getInventory().contains(sv.yourPot.getIngredientTwo())){
-							bank.withdraw(sv.yourPot.getIngredientTwo());
+							bank.withdrawAll(sv.yourPot.getIngredientTwo());
 							returnThis = 600;
 						}
 						else{
@@ -225,7 +225,7 @@ public class Potions extends States{
 				}
 			}
 			else{
-				bank.openNearestBank();
+				bank.open();
 				if(as.getClient().getMenu().containsAction("Use"))
 					as.getMouse().click();
 				returnThis = 200;

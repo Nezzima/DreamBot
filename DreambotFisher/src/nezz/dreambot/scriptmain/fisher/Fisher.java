@@ -163,7 +163,7 @@ public class Fisher extends AbstractScript{
 						if(item.getName().equals(sv.yourFish.getItemName()) || item.getName().equals(sv.yourFish.getRequiredItem()))
 							continue;
 						else{
-							getBank().deposit(item.getName());
+							getBank().depositAll(item.getName());
 							sleep(600);
 						}
 					}
@@ -173,7 +173,7 @@ public class Fisher extends AbstractScript{
 				getClient().disableIdleCamera();
 				Area a = sv.yourBank.getArea(5);
 				if(a.contains(getPlayers().myPlayer().getTile())){
-					getBank().openBank(sv.yourBank.getBankType());
+					getBank().open(sv.yourBank);
 				}
 				else{
 					getWalking().walk(sv.yourBank.getCenter());
@@ -189,7 +189,7 @@ public class Fisher extends AbstractScript{
 			for(int i = 0; i < 28; i++){
 				Item item = getInventory().getItemInSlot(i);
 				if(item != null && !item.getName().equals(sv.yourFish.getItemName()) && !item.getName().equals(sv.yourFish.getRequiredItem())){
-					getInventory().interactWithSlot(i, "Drop");
+					getInventory().interact(i, "Drop");
 					sleep(Calculations.random(150,350));
 				}
 			}

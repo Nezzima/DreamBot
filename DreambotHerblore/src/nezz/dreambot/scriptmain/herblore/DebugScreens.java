@@ -2,6 +2,7 @@ package nezz.dreambot.scriptmain.herblore;
 
 import java.awt.Color;
 import java.awt.Graphics;
+import java.util.List;
 
 import nezz.dreambot.herblore.gui.ScriptVars;
 
@@ -15,7 +16,7 @@ public class DebugScreens extends States{
 		this.as = as;
 		this.sv = sv;
 	}
-	Item[] bank;
+	List<Item> bank;
 	Item[] trade;
 	@Override
 	public String getMode() {
@@ -35,7 +36,7 @@ public class DebugScreens extends States{
 			drawTrade = false;
 		if(as.getBank().isOpen()){
 			drawBank = true;
-			bank = as.getBank().getItems();
+			bank = as.getBank().all();
 		}
 		else
 			drawBank = false;

@@ -2,6 +2,7 @@ package nezz.dreambot.scriptmain.hunter;
 
 
 public enum Hunt {
+	CrimsonSwift("Crimson Swift", "Bird snare", "Bird snare", 9345,9373,9344, "Lay","Check", "Dismantle", "Red feather", "Bones", "Raw bird meat"),
 	CopperLongtail("Copper Longtail", "Bird snare", "Bird snare", 9345,9379,9344, "Lay","Check", "Dismantle", "Orange feather", "Bones", "Raw bird meat"),
 	TropicalWagtail("Tropical Wagtail", "Bird snare", "Bird snare", 9345,9348,9344,"Lay", "Check", "Dismantle", "Stripy feather", "Bones", "Raw bird meat"),
 	GreyChin("Grey Chin", "Box trap", "Shaking box", 9380,9382,9385,"Lay","Check", "Dismantle", "Chinchompa"),

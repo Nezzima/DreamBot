@@ -5,7 +5,7 @@ import java.awt.Graphics;
 import nezz.dreambot.tools.PricedItem;
 
 import org.dreambot.api.methods.Calculations;
-import org.dreambot.api.methods.bank.BankLocation;
+import org.dreambot.api.methods.container.impl.bank.BankLocation;
 import org.dreambot.api.methods.map.Area;
 import org.dreambot.api.methods.map.Tile;
 import org.dreambot.api.script.AbstractScript;
@@ -47,7 +47,7 @@ public class Flax extends AbstractScript{
 	}
 	private GameObject getFlax(){
 		if(flaxToPick == null || !flaxToPick.exists()){
-			flaxToPick = getGameObjects().getClosest("Flax");
+			flaxToPick = getGameObjects().closest("Flax");
 		}
 		return flaxToPick;
 	}
@@ -69,7 +69,7 @@ public class Flax extends AbstractScript{
 			flaxToPick = null;
 			if(BankLocation.SEERS.getArea(5).contains(getLocalPlayer())){
 				if(getBank().isOpen()){
-					getBank().depositAll();
+					getBank().depositAllItems();
 					sleepUntil(new Condition(){
 						public boolean verify(){
 							return getInventory().isEmpty();
@@ -77,7 +77,7 @@ public class Flax extends AbstractScript{
 					},1200);
 				}
 				else{
-					getBank().openNearestBank();
+					getBank().open();
 					sleepUntil(new Condition(){
 						public boolean verify(){
 							return getBank().isOpen();

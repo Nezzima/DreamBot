@@ -7,7 +7,7 @@ import nezz.dreambot.thiever.gui.ScriptVars;
 import nezz.dreambot.thiever.gui.thieverGui;
 import nezz.dreambot.tools.RunTimer;
 
-import org.dreambot.api.methods.bank.Bank;
+import org.dreambot.api.methods.container.impl.bank.Bank;
 import org.dreambot.api.methods.input.mouse.destination.impl.EntityDestination;
 import org.dreambot.api.methods.map.Tile;
 import org.dreambot.api.methods.skills.Skill;
@@ -83,7 +83,7 @@ public class Thiever extends AbstractScript{
 				if(item != null){
 					for(String name : sv.yourThieving.getDropItems()){
 						if(name != null && name.equals(item.getName())){
-							getInventory().interactWithSlot(i, "Drop");
+							getInventory().slotInteract(i, "Drop");
 							sleep(200,400);
 							break;
 						}
@@ -101,9 +101,9 @@ public class Thiever extends AbstractScript{
 			break;
 		case STEAL:
 			log(sv.yourThieving.getName());
-			stealFrom = getNpcs().getClosest(sv.yourThieving.getName());
+			stealFrom = getNpcs().closest(sv.yourThieving.getName());
 			if(stealFrom == null){
-				stealFrom = getGameObjects().getClosest(sv.yourThieving.getName());
+				stealFrom = getGameObjects().closest(sv.yourThieving.getName());
 			}
 			if(stealFrom != null && getPlayers().myPlayer().getAnimation() == -1 && stealFrom.isOnScreen()){
 				log("Thieving!");
@@ -123,7 +123,7 @@ public class Thiever extends AbstractScript{
 		case BANK:
 			Bank bank = getBank();
 			if(bank.isOpen()){
-				bank.depositAll();
+				bank.depositAllItems();
 				sleep(300,600);
 			}
 			else{
@@ -132,7 +132,7 @@ public class Thiever extends AbstractScript{
 					sleep(300,600);
 				}
 				else{
-					bank.openBank(sv.yourBank.getBankType());
+					bank.open(sv.yourBank);
 					sleep(300,600);
 				}
 			}
@@ -141,7 +141,7 @@ public class Thiever extends AbstractScript{
 			for(int i = 0; i < 28; i++){
 				Item item = getInventory().getItemInSlot(i);
 				if(item != null && item.hasAction("Eat")){
-					getInventory().interactWithSlot(i, "Eat");
+					getInventory().slotInteract(i, "Eat");
 					sleep(600,900);
 					break;
 				}

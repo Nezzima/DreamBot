@@ -10,8 +10,6 @@ import nezz.dreambot.tutisland.gui.tutIslandGui;
 
 import org.dreambot.api.data.GameState;
 import org.dreambot.api.methods.Calculations;
-import org.dreambot.api.methods.equipment.Equipment;
-import org.dreambot.api.methods.input.mouse.destination.RectangleDestination;
 import org.dreambot.api.methods.magic.Normal;
 import org.dreambot.api.methods.map.Tile;
 import org.dreambot.api.methods.tabs.Tab;
@@ -21,7 +19,9 @@ import org.dreambot.api.script.Category;
 import org.dreambot.api.script.ScriptManifest;
 import org.dreambot.api.utilities.Timer;
 import org.dreambot.api.utilities.impl.Condition;
-import org.dreambot.api.utilities.impl.Filter;
+import org.dreambot.api.methods.container.impl.equipment.EquipmentSlot;
+import org.dreambot.api.methods.filter.*;
+import org.dreambot.api.methods.input.mouse.destination.impl.RectangleDestination;
 import org.dreambot.api.wrappers.interactive.GameObject;
 import org.dreambot.api.wrappers.interactive.NPC;
 import org.dreambot.api.wrappers.items.Item;
@@ -218,7 +218,7 @@ public class TutorialIsland extends AbstractScript{
 				if(!getWalking().isRunEnabled()){
 					getWalking().toggleRun();
 				}
-				GameObject door = getGameObjects().getClosest("Door");
+				GameObject door = getGameObjects().closest("Door");
 				if(door != null){
 					if(door.interact("Open")){
 						sleepUntil(new Condition(){
@@ -242,7 +242,7 @@ public class TutorialIsland extends AbstractScript{
 				//opened invnetory
 				break;
 			case 40:
-				GameObject tree = getGameObjects().getClosest("Tree");
+				GameObject tree = getGameObjects().closest("Tree");
 				if(tree != null){
 					if(getLocalPlayer().getAnimation() != -1){
 						sleepUntil(new Condition(){
@@ -286,7 +286,7 @@ public class TutorialIsland extends AbstractScript{
 					},5000);
 					break;
 				}
-				NPC pool = getNpcs().getClosest("Fishing spot");
+				NPC pool = getNpcs().closest("Fishing spot");
 				if(pool != null){
 					pool.interact("Net");
 					sleepUntil(new Condition(){
@@ -298,12 +298,12 @@ public class TutorialIsland extends AbstractScript{
 				//caught shrimp
 				break;
 			case 90:
-				GameObject fire = getGameObjects().getClosest("Fire");
+				GameObject fire = getGameObjects().closest("Fire");
 				if(fire == null)
 					lightFire();
 				else{
 					if(!getInventory().isItemSelected()){
-						getInventory().interactWithItem("Raw shrimps", "Use");
+						getInventory().interact("Raw shrimps", "Use");
 						sleepUntil(new Condition(){
 							public boolean verify(){
 								return getInventory().isItemSelected();
@@ -336,14 +336,14 @@ public class TutorialIsland extends AbstractScript{
 				}
 				break;
 			case 100:
-				if(getDialogues().inDialogue()){
+				if(getDialogues().canContinue()){
 					getDialogues().clickContinue();
 					break;
 				}
-				fire = getGameObjects().getClosest("Fire");
+				fire = getGameObjects().closest("Fire");
 				if(fire != null){
 					if(!getInventory().isItemSelected()){
-						getInventory().interactWithItem("Raw shrimps", "Use");
+						getInventory().interact("Raw shrimps", "Use");
 						sleepUntil(new Condition(){
 							public boolean verify(){
 								return getInventory().isItemSelected();
@@ -386,7 +386,7 @@ public class TutorialIsland extends AbstractScript{
 						},5000);
 					}
 					else{
-						pool = getNpcs().getClosest("Fishing spot");
+						pool = getNpcs().closest("Fishing spot");
 						if(pool != null){
 							pool.interact("Net");
 							sleepUntil(new Condition(){
@@ -398,10 +398,10 @@ public class TutorialIsland extends AbstractScript{
 					}
 				}
 				else{
-					fire = getGameObjects().getClosest("Fire");
+					fire = getGameObjects().closest("Fire");
 					if(fire != null){
 						if(!getInventory().isItemSelected()){
-							getInventory().interactWithItem("Raw shrimps", "Use");
+							getInventory().interact("Raw shrimps", "Use");
 							sleepUntil(new Condition(){
 								public boolean verify(){
 									return getInventory().isItemSelected();
@@ -453,7 +453,7 @@ public class TutorialIsland extends AbstractScript{
 					},2500);
 				}
 				else{
-					GameObject gate = getGameObjects().getClosest("Gate");
+					GameObject gate = getGameObjects().closest("Gate");
 					if(gate != null){
 						gate.interact("Open");
 						sleepUntil(new Condition(){
@@ -490,7 +490,7 @@ public class TutorialIsland extends AbstractScript{
 					},2500);
 				}
 				else{
-					GameObject gate = getGameObjects().getClosest("Door");
+					GameObject gate = getGameObjects().closest("Door");
 					if(gate != null){
 						gate.interact("Open");
 						sleepUntil(new Condition(){
@@ -518,7 +518,7 @@ public class TutorialIsland extends AbstractScript{
 				break;
 			case 150:
 				if(!getInventory().isItemSelected()){
-					getInventory().interactWithItem("Bucket of water", "Use");
+					getInventory().interact("Bucket of water", "Use");
 					sleepUntil(new Condition(){
 						public boolean verify(){
 							return getInventory().isItemSelected();
@@ -526,7 +526,7 @@ public class TutorialIsland extends AbstractScript{
 					},1200);
 				}
 				else{
-					getInventory().interactWithItem("Pot of flour", "Use");
+					getInventory().interact("Pot of flour", "Use");
 					sleepUntil(new Condition(){
 						public boolean verify(){
 							return getInventory().contains("Bread dough");
@@ -537,7 +537,7 @@ public class TutorialIsland extends AbstractScript{
 				break;
 			case 160:
 				if(!getInventory().isItemSelected()){
-					getInventory().interactWithItem("Bread dough", "Use");
+					getInventory().interact("Bread dough", "Use");
 					sleepUntil(new Condition(){
 						public boolean verify(){
 							return getInventory().isItemSelected();
@@ -545,7 +545,7 @@ public class TutorialIsland extends AbstractScript{
 					},1200);
 				}
 				else{
-					GameObject range = getGameObjects().getClosest("Range");
+					GameObject range = getGameObjects().closest("Range");
 					range.interact("Use");
 					sleepUntil(new Condition(){
 						public boolean verify(){
@@ -573,7 +573,7 @@ public class TutorialIsland extends AbstractScript{
 					},5000);
 				}
 				else{
-					GameObject gate = getGameObjects().getClosest("Door");
+					GameObject gate = getGameObjects().closest("Door");
 					if(gate != null){
 						gate.interact("Open");
 						sleepUntil(new Condition(){
@@ -616,7 +616,7 @@ public class TutorialIsland extends AbstractScript{
 				break;
 			case 210:
 				if(getLocalPlayer().getTile().distance(new Tile(3086,3126,0)) > 5){
-					getWalking().walkTilePath(cookToQuest, Calculations.random(10,15));
+					getWalking().walk(cookToQuest[cookToQuest.length - 1]);//, Calculations.random(10,15));
 					sleepUntil(new Condition(){
 						public boolean verify(){
 							return getLocalPlayer().isMoving();
@@ -630,7 +630,7 @@ public class TutorialIsland extends AbstractScript{
 					},2500);
 				}
 				else{
-					GameObject gate = getGameObjects().getClosest("Door");
+					GameObject gate = getGameObjects().closest("Door");
 					if(gate != null){
 						gate.interact("Open");
 						sleepUntil(new Condition(){
@@ -651,7 +651,7 @@ public class TutorialIsland extends AbstractScript{
 				//open quest tab
 				break;
 			case 250:
-				GameObject gate = getGameObjects().getClosest("Ladder");
+				GameObject gate = getGameObjects().closest("Ladder");
 				if(gate != null){
 					gate.interact("Climb-down");
 					sleepUntil(new Condition(){
@@ -669,7 +669,7 @@ public class TutorialIsland extends AbstractScript{
 				//talk to mining instructor
 				break;
 			case 270:
-				GameObject tin = getGameObjects().getClosest(new Filter<GameObject>(){
+				GameObject tin = getGameObjects().closest(new Filter<GameObject>(){
 					public boolean match(GameObject g){
 						if(g == null || g.getName() == null)
 							return false;
@@ -691,7 +691,7 @@ public class TutorialIsland extends AbstractScript{
 				//inspect tin
 				break;
 			case 280:
-				tin = getGameObjects().getClosest(new Filter<GameObject>(){
+				tin = getGameObjects().closest(new Filter<GameObject>(){
 					public boolean match(GameObject g){
 						if(g == null || g.getName() == null)
 							return false;
@@ -713,7 +713,7 @@ public class TutorialIsland extends AbstractScript{
 				//inspect copper
 				break;
 			case 300:
-				tin = getGameObjects().getClosest(new Filter<GameObject>(){
+				tin = getGameObjects().closest(new Filter<GameObject>(){
 					public boolean match(GameObject g){
 						if(g == null || g.getName() == null)
 							return false;
@@ -735,7 +735,7 @@ public class TutorialIsland extends AbstractScript{
 				//mine tin
 				break;
 			case 310:
-				tin = getGameObjects().getClosest(new Filter<GameObject>(){
+				tin = getGameObjects().closest(new Filter<GameObject>(){
 					public boolean match(GameObject g){
 						if(g == null || g.getName() == null)
 							return false;
@@ -757,14 +757,14 @@ public class TutorialIsland extends AbstractScript{
 				//mine copper
 				break;
 			case 320:
-				if(getDialogues().inDialogue()){
+				if(getDialogues().canContinue()){
 					getDialogues().clickContinue();
 					sleep(900,1200);
 				}
 				else{
 					if(!getInventory().isItemSelected()){
 						sleep(1200,1800);
-						getInventory().interactWithItem("Tin ore", "Use");
+						getInventory().interact("Tin ore", "Use");
 						sleepUntil(new Condition(){
 							public boolean verify(){
 								return getInventory().isItemSelected();
@@ -772,7 +772,8 @@ public class TutorialIsland extends AbstractScript{
 						},1200);
 					}
 					else{
-						GameObject furnace = getGameObjects().getClosest("Furnace");
+						sleep(900,1200);
+						GameObject furnace = getGameObjects().closest("Furnace");
 						if(furnace != null){
 							furnace.interact("Use");
 							sleepUntil(new Condition(){
@@ -787,7 +788,7 @@ public class TutorialIsland extends AbstractScript{
 				break;
 			case 340:
 				if(!getInventory().isItemSelected()){
-					getInventory().interactWithItem("Bronze bar", "Use");
+					getInventory().interact("Bronze bar", "Use");
 					sleepUntil(new Condition(){
 						public boolean verify(){
 							return getInventory().isItemSelected();
@@ -795,7 +796,7 @@ public class TutorialIsland extends AbstractScript{
 					},1200);
 				}
 				else{
-					GameObject furnace = getGameObjects().getClosest("Anvil");
+					GameObject furnace = getGameObjects().closest("Anvil");
 					if(furnace != null){
 						furnace.interact("Use");
 						sleepUntil(new Condition(){
@@ -831,7 +832,7 @@ public class TutorialIsland extends AbstractScript{
 					},2500);
 				}
 				else{
-					gate = getGameObjects().getClosest("Gate");
+					gate = getGameObjects().closest("Gate");
 					if(gate != null){
 						gate.interact("Open");
 						sleepUntil(new Condition(){
@@ -861,7 +862,7 @@ public class TutorialIsland extends AbstractScript{
 				//open equipment stats
 				break;
 			case 405:
-				getInventory().interactWithItem("Bronze dagger", "Equip");
+				getInventory().interact("Bronze dagger", "Equip");
 				sleepUntil(new Condition(){
 					public boolean verify(){
 						return getPlayerSettings().getConfig(TUT_PROG) != 410;
@@ -871,24 +872,24 @@ public class TutorialIsland extends AbstractScript{
 				//equip dagger
 				break;
 			case 420:
-				Item i = getEquipment().getItemInSlot(Equipment.WEAPON);
+				Item i = getEquipment().getItemInSlot(EquipmentSlot.WEAPON.getSlot());
 				if(i != null && i.getName().contains("dagger")){
-					getEquipment().unequip(Equipment.WEAPON);
+					getEquipment().unequip(EquipmentSlot.WEAPON);
 				}
 				else{
 					if(i != null){
-						getInventory().interactWithItem("Wooden shield", "Wield");
+						getInventory().interact("Wooden shield", "Wield");
 						sleepUntil(new Condition(){
 							public boolean verify(){
-								return getEquipment().getItemInSlot(Equipment.SHIELD) != null;
+								return getEquipment().getItemInSlot(EquipmentSlot.SHIELD.getSlot()) != null;
 							}
 						},1200);
 					}
 					else{
-						getInventory().interactWithItem("Bronze sword", "Wield");
+						getInventory().interact("Bronze sword", "Wield");
 						sleepUntil(new Condition(){
 							public boolean verify(){
-								return getEquipment().getItemInSlot(Equipment.WEAPON) != null;
+								return getEquipment().getItemInSlot(EquipmentSlot.WEAPON.getSlot()) != null;
 							}
 						},1200);
 					}
@@ -914,7 +915,7 @@ public class TutorialIsland extends AbstractScript{
 					},2500);
 				}
 				else{
-					gate = getGameObjects().getClosest("Gate");
+					gate = getGameObjects().closest("Gate");
 					if(gate != null){
 						gate.interact("Open");
 						sleepUntil(new Condition(){
@@ -927,7 +928,7 @@ public class TutorialIsland extends AbstractScript{
 				//open rat gate
 				break;
 			case 450:
-				NPC rat = getNpcs().getClosest("Giant rat");
+				NPC rat = getNpcs().closest("Giant rat");
 				if(rat != null){
 					rat.interact("Attack");
 					sleepUntil(new Condition(){
@@ -948,7 +949,7 @@ public class TutorialIsland extends AbstractScript{
 				break;
 			case 470:
 				if(!getMap().canReach(new Tile(3112,9518,0))){
-					gate = getGameObjects().getClosest("Gate");
+					gate = getGameObjects().closest("Gate");
 					if(gate != null){
 						gate.interact("Open");
 						sleepUntil(new Condition(){
@@ -963,26 +964,26 @@ public class TutorialIsland extends AbstractScript{
 				//talk to combat instructor
 				break;
 			case 480:
-				i = getEquipment().getItemInSlot(Equipment.ARROWS);
-				Item a = getEquipment().getItemInSlot(Equipment.WEAPON);
+				i = getEquipment().getItemInSlot(EquipmentSlot.ARROWS.getSlot());
+				Item a = getEquipment().getItemInSlot(EquipmentSlot.WEAPON.getSlot());
 				if(i == null){
-					getInventory().interactWithItem("Bronze arrow", "Wield");
+					getInventory().interact("Bronze arrow", "Wield");
 					sleepUntil(new Condition(){
 						public boolean verify(){
-							return getEquipment().getItemInSlot(Equipment.ARROWS) != null;
+							return getEquipment().getItemInSlot(EquipmentSlot.ARROWS.getSlot()) != null;
 						}
 					},1200);
 				}
 				else if(a == null || !a.getName().equals("Shortbow")){
-					getInventory().interactWithItem("Shortbow", "Wield");
+					getInventory().interact("Shortbow", "Wield");
 					sleepUntil(new Condition(){
 						public boolean verify(){
-							return getEquipment().getItemInSlot(Equipment.WEAPON) != null && getEquipment().getItemInSlot(Equipment.WEAPON).getName().equals("Shortbow");
+							return getEquipment().getItemInSlot(EquipmentSlot.WEAPON.getSlot()) != null && getEquipment().getItemInSlot(EquipmentSlot.WEAPON.getSlot()).getName().equals("Shortbow");
 						}
 					},1200);
 				}
 				else{
-					rat = getNpcs().getClosest("Giant rat");
+					rat = getNpcs().closest("Giant rat");
 					if(rat != null){
 						rat.interact("Attack");
 						sleepUntil(new Condition(){
@@ -997,7 +998,7 @@ public class TutorialIsland extends AbstractScript{
 				break;
 			case 490:
 				if(getLocalPlayer().getInteractingCharacter() == null){
-					rat = getNpcs().getClosest("Giant rat");
+					rat = getNpcs().closest("Giant rat");
 					if(rat != null){
 						rat.interact("Attack");
 						sleepUntil(new Condition(){
@@ -1018,7 +1019,7 @@ public class TutorialIsland extends AbstractScript{
 				break;
 			case 500:
 				if(getLocalPlayer().getTile().distance(new Tile(3112,9525,0)) > 5){
-					getWalking().walkTilePath(combatToLadder, Calculations.random(10,15));
+					getWalking().walk(combatToLadder[combatToLadder.length-1]);//, Calculations.random(10,15));
 					sleepUntil(new Condition(){
 						public boolean verify(){
 							return getLocalPlayer().isMoving();
@@ -1031,7 +1032,7 @@ public class TutorialIsland extends AbstractScript{
 					},2500);
 				}
 				else{
-					gate = getGameObjects().getClosest("Ladder");
+					gate = getGameObjects().closest("Ladder");
 					if(gate != null){
 						gate.interact("Climb-up");
 						sleepUntil(new Condition(){
@@ -1071,13 +1072,13 @@ public class TutorialIsland extends AbstractScript{
 				else{
 					wc = getWidgets().getChildWidget(228,1);
 					if(wc == null || !wc.isVisible() || !wc.getText().contains("Yes")){
-						if(!getDialogues().inDialogue()){
-							GameObject bankBooth = getGameObjects().getClosest("Bank booth");
+						if(!getDialogues().canContinue()){
+							GameObject bankBooth = getGameObjects().closest("Bank booth");
 							if(bankBooth != null){
 								bankBooth.interact("Use");
 								sleepUntil(new Condition(){
 									public boolean verify(){
-										return getDialogues().inDialogue();
+										return getDialogues().canContinue();
 									}
 								},1200);
 							}
@@ -1086,7 +1087,7 @@ public class TutorialIsland extends AbstractScript{
 							getDialogues().clickContinue();
 							sleepUntil(new Condition(){
 								public boolean verify(){
-									return !getDialogues().inDialogue();
+									return !getDialogues().canContinue();
 								}
 							},1200);
 						}
@@ -1111,20 +1112,20 @@ public class TutorialIsland extends AbstractScript{
 				getMouse().click();
 				sleepUntil(new Condition(){
 					public boolean verify(){
-						return getDialogues().inDialogue();
+						return getDialogues().canContinue();
 					}
 				},2400);
 				*/
-				GameObject pbooth = getGameObjects().getClosest("Poll booth");
+				GameObject pbooth = getGameObjects().closest("Poll booth");
 				if(pbooth != null){
 					pbooth.interact("Use");
 					sleepUntil(new Condition(){
 						public boolean verify(){
-							return getDialogues().inDialogue();
+							return getDialogues().canContinue();
 						}
 					},2400);
 				}
-				while(getDialogues().inDialogue()){
+				while(getDialogues().canContinue()){
 					getDialogues().clickContinue();
 					sleep(300,500);
 				}
@@ -1138,7 +1139,7 @@ public class TutorialIsland extends AbstractScript{
 				//close poll booth
 				break;
 			case 525:
-				door = getGameObjects().getClosest(new Filter<GameObject>(){
+				door = getGameObjects().closest(new Filter<GameObject>(){
 					public boolean match(GameObject g){
 						if(g == null || g.getName() == null)
 							return false;
@@ -1162,7 +1163,7 @@ public class TutorialIsland extends AbstractScript{
 				//talk to financial guy
 				break;
 			case 540:
-				door = getGameObjects().getClosest(new Filter<GameObject>(){
+				door = getGameObjects().closest(new Filter<GameObject>(){
 					public boolean match(GameObject g){
 						if(g == null || g.getName() == null)
 							return false;
@@ -1183,7 +1184,7 @@ public class TutorialIsland extends AbstractScript{
 				break;
 			case 550:
 				if(getLocalPlayer().getTile().distance(new Tile(3126,3106,0)) > 5){
-					getWalking().walkTilePath(finToPray, Calculations.random(10,15));
+					getWalking().walk(finToPray[finToPray.length-1]);//, Calculations.random(10,15));
 					sleepUntil(new Condition(){
 						public boolean verify(){
 							return getLocalPlayer().isMoving();
@@ -1196,7 +1197,7 @@ public class TutorialIsland extends AbstractScript{
 					},2500);
 				}
 				else{
-					gate = getGameObjects().getClosest(new Filter<GameObject>(){
+					gate = getGameObjects().closest(new Filter<GameObject>(){
 						public boolean match(GameObject g){
 							if(g == null || g.getName() == null){
 								return false;
@@ -1206,7 +1207,7 @@ public class TutorialIsland extends AbstractScript{
 							return g.getTile().equals(new Tile(3129,3107,0));
 						}
 					});
-					if(gate != null && !getMap().canReach(getNpcs().getClosest(PRAY_GUIDE).getTile())){
+					if(gate != null && !getMap().canReach(getNpcs().closest(PRAY_GUIDE).getTile())){
 						gate.interact("Open");
 						sleep(600,900);
 					}
@@ -1231,7 +1232,7 @@ public class TutorialIsland extends AbstractScript{
 				//open ignore
 				break;
 			case 610:
-				door = getGameObjects().getClosest("Door");
+				door = getGameObjects().closest("Door");
 				if(door != null){
 					door.interact("Open");
 					sleepUntil(new Condition(){
@@ -1244,7 +1245,7 @@ public class TutorialIsland extends AbstractScript{
 				break;
 			case 620:
 				if(getLocalPlayer().getTile().distance(new Tile(3141,3088,0)) > 5){
-					getWalking().walkTilePath(prayToMage,Calculations.random(10,15));
+					getWalking().walk(prayToMage[prayToMage.length-1]);//;,Calculations.random(10,15));
 					sleepUntil(new Condition(){
 						public boolean verify(){
 							return getLocalPlayer().isMoving();
@@ -1269,7 +1270,7 @@ public class TutorialIsland extends AbstractScript{
 				//talk to mage guy
 				break;
 			case 650:
-				getMagic().castSpellOn(Normal.WIND_STRIKE, getNpcs().getClosest("Chicken"));
+				getMagic().castSpellOn(Normal.WIND_STRIKE, getNpcs().closest("Chicken"));
 				sleepUntil(new Condition(){
 					public boolean verify(){
 						return getPlayerSettings().getConfig(TUT_PROG) != 650;
@@ -1297,7 +1298,7 @@ public class TutorialIsland extends AbstractScript{
 			}
 			break;
 		case OPEN_TAB:
-			if(getDialogues().inDialogue()){
+			if(getDialogues().canContinue()){
 				getDialogues().clickContinue();
 			}
 			final Tab t = getTab();
@@ -1350,7 +1351,7 @@ public class TutorialIsland extends AbstractScript{
 
 	private void lightFire(){
 		if(!getInventory().contains("Logs")){
-			GameObject tree = getGameObjects().getClosest("Tree");
+			GameObject tree = getGameObjects().closest("Tree");
 			if(tree != null){
 				if(tree.interact("Chop down")){
 					sleepUntil(new Condition(){
@@ -1370,7 +1371,7 @@ public class TutorialIsland extends AbstractScript{
 		}
 		if(getInventory().contains("Logs")){
 			if(!getInventory().isItemSelected()){
-				getInventory().interactWithItem("Tinderbox", "Use");
+				getInventory().interact("Tinderbox", "Use");
 				sleepUntil(new Condition(){
 					public boolean verify(){
 						return getInventory().isItemSelected();
@@ -1378,7 +1379,7 @@ public class TutorialIsland extends AbstractScript{
 				},1200);
 			}
 			if(getInventory().isItemSelected()){
-				getInventory().interactWithItem("Logs", "Use");
+				getInventory().interact("Logs", "Use");
 				sleepUntil(new Condition(){
 					public boolean verify(){
 						return getLocalPlayer().getAnimation() != -1;
@@ -1394,8 +1395,8 @@ public class TutorialIsland extends AbstractScript{
 	}
 
 	private void talkTo(String npc){
-		if(!getDialogues().inDialogue()){
-			final NPC guide = getNpcs().getClosest(npc);
+		if(!getDialogues().canContinue()){
+			final NPC guide = getNpcs().closest(npc);
 			if(guide != null){
 				if(guide.isOnScreen()){
 					guide.interact("Talk-to");
@@ -1411,7 +1412,7 @@ public class TutorialIsland extends AbstractScript{
 					},5000);
 					sleepUntil(new Condition(){
 						public boolean verify(){
-							return getDialogues().inDialogue();
+							return getDialogues().canContinue();
 						}
 					},1200);
 				}

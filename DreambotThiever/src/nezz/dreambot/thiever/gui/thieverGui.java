@@ -11,13 +11,14 @@ import javax.swing.JComboBox;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JButton;
 
+import org.dreambot.api.methods.container.impl.bank.BankLocation;
+
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
 import java.awt.Color;
 
 import nezz.dreambot.thiever.enums.Thieving;
 
-import org.dreambot.api.methods.bank.BankLocation;
 
 public class thieverGui extends JFrame {
 

@@ -40,13 +40,13 @@ public class Identify extends States{
 		case "BANK":
 			if(as.getBank().isOpen()){
 				if(as.getInventory().contains(sv.yourHerb.getUnnotedCleanId())){
-					as.getBank().depositAll();
+					as.getBank().depositAllItems();
 					MethodProvider.sleepUntil(depositItems,2000);
 					returnThis = 200;
 				}
 				else{
 					if(as.getBank().contains(sv.yourHerb.getUnnotedGrimyId())){
-						as.getBank().withdraw(sv.yourHerb.getUnnotedGrimyId());
+						as.getBank().withdrawAll(sv.yourHerb.getUnnotedGrimyId());
 						MethodProvider.sleepUntil(withdrawItems,2000);
 						returnThis = 200;
 					}
@@ -58,7 +58,7 @@ public class Identify extends States{
 			}
 			else{
 				updateLoot();
-				as.getBank().openNearestBank();
+				as.getBank().open();
 				if(as.getClient().getMenu().containsAction("Use"))
 					as.getMouse().click();
 				returnThis = 200;
@@ -72,7 +72,7 @@ public class Identify extends States{
 				for(int i = 0; i < 28; i++){
 					Item item = as.getInventory().getItemInSlot(i);
 					if(item != null && item.getName().equals("Herb")){
-						as.getInventory().interactWithSlot(i, "Identify");
+						as.getInventory().slotInteract(i, "Identify");
 						MethodProvider.sleep(100,300);
 						this.updateLoot();
 					}

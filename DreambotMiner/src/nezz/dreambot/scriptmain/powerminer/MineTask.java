@@ -5,7 +5,7 @@ import java.util.List;
 import nezz.dreambot.tools.PricedItem;
 
 import org.dreambot.api.methods.MethodContext;
-import org.dreambot.api.methods.bank.BankLocation;
+import org.dreambot.api.methods.container.impl.bank.BankLocation;
 import org.dreambot.api.methods.filter.Filter;
 import org.dreambot.api.methods.map.Tile;
 import org.dreambot.api.methods.skills.Skill;
@@ -68,7 +68,7 @@ public class MineTask {
 	
 	public boolean reachedGoal(){
 		if(goal.toLowerCase().contains("bank")){
-			Item ore = ctx.getBank().getItem(oreName);
+			Item ore = ctx.getBank().get(oreName);
 			if(ore == null)
 				return false;
 			else{

@@ -15,7 +15,7 @@ public class PricedItem {
 		this.name = name;
 		this.ctx = ctx;
 		if(ctx.getInventory().contains(name)){
-			lastCount = (int) ctx.getInventory().getCount(name);
+			lastCount = (int) ctx.getInventory().count(name);
 		}
 		if(getPrice){
 			String tempName = name;
@@ -34,7 +34,7 @@ public class PricedItem {
 		this.ctx = ctx;
 		this.setId(id);
 		if(ctx.getInventory().contains(id))
-			lastCount = (int) ctx.getInventory().getCount(id);
+			lastCount = (int) ctx.getInventory().count(id);
 		if(getPrice)
 			price = PriceGrab.getInstance().getPrice(name, 2);
 		else
@@ -44,16 +44,16 @@ public class PricedItem {
 	public void update(){
 		int increase = 0;
 		if(id==0)
-			increase =  (int) (ctx.getInventory().getCount(name)- lastCount);
+			increase =  (int) (ctx.getInventory().count(name)- lastCount);
 		else
-			increase =  (int) (ctx.getInventory().getCount(id)- lastCount);
+			increase =  (int) (ctx.getInventory().count(id)- lastCount);
 		if(increase < 0)
 			increase = 0;
 		amount+=increase;
 		if(id==0)
-			lastCount = (int) ctx.getInventory().getCount(name);
+			lastCount = (int) ctx.getInventory().count(name);
 		else
-			lastCount = (int) ctx.getInventory().getCount(id);
+			lastCount = (int) ctx.getInventory().count(id);
 	}
 
 	public void setName(String name){

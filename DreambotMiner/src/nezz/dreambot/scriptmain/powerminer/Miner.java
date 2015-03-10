@@ -10,8 +10,9 @@ import nezz.dreambot.powerminer.gui.ScriptVars;
 import nezz.dreambot.powerminer.gui.minerGui;
 
 import org.dreambot.api.methods.Calculations;
-import org.dreambot.api.methods.bank.Bank;
-import org.dreambot.api.methods.inventory.Inventory;
+import org.dreambot.api.methods.container.impl.Inventory;
+import org.dreambot.api.methods.container.impl.bank.Bank;
+import org.dreambot.api.methods.filter.Filter;
 import org.dreambot.api.methods.map.Tile;
 import org.dreambot.api.methods.skills.Skill;
 import org.dreambot.api.script.AbstractScript;
@@ -19,7 +20,6 @@ import org.dreambot.api.script.Category;
 import org.dreambot.api.script.ScriptManifest;
 import org.dreambot.api.utilities.Timer;
 import org.dreambot.api.utilities.impl.Condition;
-import org.dreambot.api.utilities.impl.Filter;
 import org.dreambot.api.wrappers.interactive.GameObject;
 import org.dreambot.api.wrappers.interactive.Player;
 import org.dreambot.api.wrappers.items.Item;
@@ -116,7 +116,7 @@ public class Miner extends AbstractScript{
 			break;
 		case BANK:
 			if(bank.isOpen()){
-				if(inv.getItem(new Filter<Item>(){
+				if(inv.get(new Filter<Item>(){
 					public boolean match(Item i){
 						if(i == null || i.getName() == null){
 							return false;
@@ -127,7 +127,7 @@ public class Miner extends AbstractScript{
 					for(int i =0; i < 28; i++){
 						final Item item = inv.getItemInSlot(i);
 						if(item != null && !item.getName().contains("pickaxe")){
-							bank.deposit(item);
+							bank.depositAll(item.getName());
 							sleepUntil(new Condition(){
 								public boolean verify(){
 									return !inv.contains(item.getName());
@@ -137,7 +137,7 @@ public class Miner extends AbstractScript{
 					}
 				}
 				else{
-					bank.depositAll();
+					bank.depositAllItems();
 					sleepUntil(new Condition(){
 						public boolean verify(){
 							return inv.isEmpty();
@@ -147,7 +147,7 @@ public class Miner extends AbstractScript{
 			}
 			else{
 				if(currTask.getBank().getArea(4).contains(getLocalPlayer())){
-					bank.openNearestBank();
+					bank.open();
 					sleepUntil(new Condition(){
 						public boolean verify(){
 							return bank.isOpen();
@@ -166,12 +166,12 @@ public class Miner extends AbstractScript{
 			break;
 		case DROP:
 			currRock = null;
-			Item ore = inv.getItem(currTask.getOreName());
+			Item ore = inv.get(currTask.getOreName());
 			if(ore != null){
-				inv.interactWithItem(ore.getName(), "Drop");
+				inv.interact(ore.getName(), "Drop");
 				sleepUntil(new Condition(){
 					public boolean verify(){
-						Item ore = inv.getItem(currTask.getOreName());
+						Item ore = inv.get(currTask.getOreName());
 						return ore == null;
 					}
 				},1200);
@@ -188,7 +188,6 @@ public class Miner extends AbstractScript{
 			}
 			else{
 				if(currTask.getStartTile().distance(getLocalPlayer()) > 10){
-					log("further than 10!");
 					getWalking().walk(currTask.getStartTile());
 					sleepUntil(new Condition(){
 						public boolean verify(){
@@ -197,7 +196,6 @@ public class Miner extends AbstractScript{
 					},2000);
 				}
 				else if((currTask.dontMove() && !getLocalPlayer().getTile().equals(currTask.getStartTile()))){
-					log("don't move, and you're not on tile");
 					getWalking().walk(currTask.getStartTile());
 					sleepUntil(new Condition(){
 						public boolean verify(){
@@ -260,7 +258,7 @@ public class Miner extends AbstractScript{
 
 	public void hover(boolean fromInteract){
 		int firstEmpty = getFirstEmptySlot();
-		Rectangle r = getInventory().getSlotBounds(firstEmpty);
+		Rectangle r = getInventory().slotBounds(firstEmpty);
 		if(!r.contains(getMouse().getPosition())){
 			int x1 = (int)r.getCenterX() - Calculations.random(0,10);
 			int y1 = (int)r.getCenterY() - Calculations.random(0,10);
@@ -310,7 +308,7 @@ public class Miner extends AbstractScript{
 			}
 		}
 		else{
-			List<GameObject> rocks = getGameObjects().getAll(new Filter<GameObject>(){
+			List<GameObject> rocks = getGameObjects().all(new Filter<GameObject>(){
 				public boolean match(GameObject go){
 					if(go == null || !go.exists() || go.getName() == null || !go.getName().equals("Rocks"))
 						return false;

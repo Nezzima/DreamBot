@@ -8,7 +8,7 @@ import java.awt.Rectangle;
 import nezz.dreambot.tools.PricedItem;
 
 import org.dreambot.api.methods.Calculations;
-import org.dreambot.api.methods.bank.BankType;
+import org.dreambot.api.methods.container.impl.bank.BankType;
 import org.dreambot.api.methods.filter.Filter;
 import org.dreambot.api.methods.map.Tile;
 import org.dreambot.api.script.AbstractScript;
@@ -168,15 +168,9 @@ public class IronKnifer extends AbstractScript{
 			if(!getBank().isOpen()){
 				if(BANK_TILE.distance(getLocalPlayer()) > 5 && !getLocalPlayer().isMoving()){
 					walk(BANK_TILE);
-					/*getWalking().walk(BANK_TILE);
-					sleepUntil(new Condition(){
-						public boolean verify(){
-							return getLocalPlayer().isMoving();
-						}
-					},1200);*/
 				}
 				else if(!getLocalPlayer().isMoving()){
-					getBank().openBank(BankType.BOOTH);
+					getBank().open();
 					sleepUntil(new Condition(){
 						public boolean verify(){
 							return getBank().isOpen();
@@ -185,7 +179,6 @@ public class IronKnifer extends AbstractScript{
 				}
 				else if(!movedBank){
 					getMouse().move(getHoverSpot());
-					//getMouse().move(getLocalPlayer());
 					movedBank = true;
 				}
 			}
@@ -200,7 +193,7 @@ public class IronKnifer extends AbstractScript{
 					},1200);
 				}
 				else if(getBank().contains("Iron bar")){
-					getBank().withdraw("Iron bar");
+					getBank().withdrawAll("Iron bar");
 					sleepUntil(new Condition(){
 						public boolean verify(){
 							return getInventory().contains("Iron bar");
@@ -237,7 +230,7 @@ public class IronKnifer extends AbstractScript{
 						if(dest != null && dest.distance(ANVIL_TILE) < 4){
 							if(!getInventory().isItemSelected()){
 								sleep(400,1400);
-								getInventory().interactWithItem("Iron bar","Use");
+								getInventory().interact("Iron bar","Use");
 							}
 						}
 					}
@@ -259,7 +252,7 @@ public class IronKnifer extends AbstractScript{
 							}
 						}
 						else{
-							getInventory().interactWithItem("Iron bar", "Use");
+							getInventory().interact("Iron bar", "Use");
 							sleepUntil(new Condition(){
 								public boolean verify(){
 									return getInventory().isItemSelected();
