@@ -31,7 +31,7 @@ import org.dreambot.api.wrappers.interactive.NPC;
 import org.dreambot.api.wrappers.items.Item;
 import org.dreambot.api.wrappers.widgets.WidgetChild;
 
-@ScriptManifest(author = "Nezz", category = Category.MISC, description = "Does tutorial island", name = "DreamBot Tutorial Island", version = 0)
+@ScriptManifest(author = "Nezz", category = Category.MISC, description = "Does tutorial island", name = "DreamBot Tutorial Island", version = 1)
 public class TutorialIsland extends AbstractScript{
 
 	private final int TAB_CONFIG = 1021;
@@ -60,6 +60,8 @@ public class TutorialIsland extends AbstractScript{
 
 	private boolean hover = false;
 	
+	private boolean forceEmail = false;
+	
 	ScriptVars sv = new ScriptVars();
 	boolean started = false;
 	boolean accMade = false;
@@ -78,7 +80,14 @@ public class TutorialIsland extends AbstractScript{
 		}
 		return State.DO_TUT;
 	}
-
+	
+	public void onStart(String...args){
+		sv.baseName = args[0];
+		sv.pass = args[1];
+		sv.age = args[2];
+		sv.email = args.length > 3 ? args[3] : null;
+		t = new Timer();
+	}
 	public void onStart(){
 		if(!getClient().isLoggedIn()){
 			tutIslandGui gui = new tutIslandGui(sv);
@@ -86,102 +95,147 @@ public class TutorialIsland extends AbstractScript{
 			while(!sv.started){
 				sleep(30);
 			}
-			if(!accMade){
-				int made = -1;
-				log("Creating acc");
-				String tempName = sv.baseName;
-				while(tempName.contains("#")){
+		}
+		else{
+			accMade = true;
+			started = true;
+		}
+		t = new Timer();
+	}
+	
+	
+    private WidgetChild getClickHereToContinue(){
+        if(!getDialogues().inDialogue()){
+        	log("Not in dialogue");
+            return null;
+        }
+        List<WidgetChild> children = getWidgets().getWidgetChildrenContainingText("Click here to continue");
+        if(children.isEmpty()){
+            children = getWidgets().getWidgetChildrenContainingText("Click to continue");
+        }
+        if(children.isEmpty()){
+            return null;
+        }
+        for(WidgetChild wc : children){
+            if(wc.isVisible()){
+                if(wc.getParentID() != 137){
+                    if(wc.isGrandChild()){
+                        if(wc.getID() != 107 && wc.isVisible())
+                            return wc;
+                    }else if(wc.isVisible()){
+                        return wc;
+                    }
+                }
+            }
+        }
+        children = getWidgets().getWidgetChildrenContainingText("Click to continue");
+        for(WidgetChild wc : children){
+            if(wc.isVisible()){
+                if(wc.getParentID() != 137){
+                    if(wc.isGrandChild()){
+                        if(wc.getID() != 107 && wc.isVisible())
+                            return wc;
+                    }else if(wc.isVisible()){
+                        return wc;
+                    }
+                }
+            }
+        }
+        return null;
+    }
+    
+    private boolean isRoofEnabled(){
+    	return false;
+    }
+    
+    private int toggleRoof(){
+    	if(!isRoofEnabled())
+    		return -1;
+    	
+    	return -1;
+    }
+    
+    private int makeAccount(){
+    	if(!accMade){
+			int made = -1;
+			log("Creating acc");
+			String tempName = sv.baseName;
+			while(tempName.contains("#")){
+				String rep = ""+Calculations.random(0,10);
+				log("Swapping # with " + rep);
+				tempName = tempName.replaceFirst("#", rep);
+			}
+			String tempEmail = "";
+			if(sv.email != null){
+				tempEmail = sv.email;
+				while(tempEmail.contains("#")){
 					String rep = ""+Calculations.random(0,10);
 					log("Swapping # with " + rep);
-					tempName = tempName.replaceFirst("#", rep);
-					log(tempName);
+					tempEmail = tempEmail.replaceFirst("#", rep);
 				}
-				log("Trying name: " + tempName);
-				AccountCreate ac = new AccountCreate(getClient().getInstance());
-				try {
-					made = ac.makeAccount(tempName, tempName+"@gmail.com",sv.pass, sv.age);
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
-				if(made == 0){
-					log("Success! Username is: " + tempName);
-					accMade = true;
-					sv.finalName = tempName;
-					FileMethods fm = new FileMethods("tutIslandDA");
-					fm.appendFile(tempName + "@gmail.com" + ":" + sv.pass,"tutIslandAccs");
-				}
-				else{
-					log("Creation failed!");
-					if(!sv.baseName.contains("#")){
-						log("Your username is taken, please try again with another name!");
-						return;
-					}
-					accMade = false;
-				}
+			}
+			else
+				tempEmail = tempName+"@gmail.com";
+			sv.finalName = tempName;
+			log("Trying name: " + tempName + (sv.email != null ? " with email:" + tempEmail : ""));
+			AccountCreate ac = new AccountCreate(getClient().getInstance());
+			log(tempName+":"+tempEmail+":"+sv.pass+":"+sv.age);
+			try {
+				made = ac.makeAccount(tempName,tempEmail,sv.pass, sv.age);
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+			if(made == 0){
+				sv.email = tempEmail;
+				log("Success!");
+				accMade = true;
+				FileMethods fm = new FileMethods("tutIsland");
+				fm.appendFile(sv.getEmail() + ":" + sv.pass,"tutIslandAccs");
 			}
 			else{
-				log("Login!");
-				login();
-				sleepUntil(new Condition(){
-					public boolean verify(){
-						return getWidgets().getWidget(APPEAR_PAR)!=null;
-					}
-				},5000);
+				log("Creation failed!");
+				if(!sv.baseName.contains("#")){
+					log("Your username is taken, please try again with another name!");
+					return -1;
+				}
+				accMade = false;
 			}
 		}
-	}
-
+		else{
+			log("Login!");
+			login();
+			sleepUntil(new Condition(){
+				public boolean verify(){
+					return getWidgets().getWidget(APPEAR_PAR)!=null;
+				}
+			},30000);
+		}
+    	return Calculations.random(250,350);
+    }
 
 	@Override
 	public int onLoop() {
 		state = getState();
+		if(state != State.CREATE_ACC){
+			List<WidgetChild> clickToContinue = getWidgets().getWidgetChildrenContainingText("Click to continue");
+			if(!clickToContinue.isEmpty()){
+				WidgetChild wc = clickToContinue.get(0);
+				if(wc != null && wc.isVisible()){
+					wc.interact();
+					sleep(900,1200);
+				}
+			}
+		}
 		switch(state){
 		case CREATE_ACC:
 			if(!getClient().isLoggedIn()){
-				if(!accMade){
-					int made = -1;
-					log("Creating acc");
-					String tempName = sv.baseName;
-					while(tempName.contains("#")){
-						String rep = ""+Calculations.random(0,10);
-						log("Swapping # with " + rep);
-						tempName = tempName.replaceFirst("#", rep);
-						log(tempName);
-					}
-					log("Trying name: " + tempName);
-					AccountCreate ac = new AccountCreate(getClient().getInstance());
-					try {
-						made = ac.makeAccount(tempName, tempName+"@gmail.com",sv.pass, sv.age);
-					} catch (IOException e) {
-						e.printStackTrace();
-					}
-					if(made == 0){
-						log("Success! Username is: " + tempName);
-						accMade = true;
-						sv.finalName = tempName;
-						FileMethods fm = new FileMethods("tutIsland");
-						fm.appendFile(tempName + "@gmail.com" + ":" + sv.pass,"tutIslandAccs");
-					}
-					else{
-						log("Creation failed!");
-						if(!sv.baseName.contains("#")){
-							log("Your username is taken, please try again with another name!");
-							return -1;
-						}
-						accMade = false;
-					}
-				}
-				else{
-					log("Login!");
-					login();
-					sleepUntil(new Condition(){
-						public boolean verify(){
-							return getWidgets().getWidget(APPEAR_PAR)!=null;
-						}
-					},30000);
+				int res = makeAccount();
+				if(res == -1){
+					return res;
 				}
 			}
 			else{
+				accMade = true;
 				t = new Timer();
 				log("appearance");
 				final Widget par = getWidgets().getWidget(APPEAR_PAR);
@@ -210,8 +264,8 @@ public class TutorialIsland extends AbstractScript{
 							return wc == null || !wc.isVisible();
 						}
 					},1200);
+					started = true;
 				}
-				started = true;
 			}
 			break;
 		case DO_TUT:
@@ -477,7 +531,7 @@ public class TutorialIsland extends AbstractScript{
 				break;
 			case 200:
 				//261,65
-				WidgetChild wc = getWidgets().getChildWidget(261,52);
+				WidgetChild wc = getWidgets().getChildWidget(261,63);
 				if(wc != null && wc.isVisible()){
 					wc.interact();
 					sleepUntil(new Condition(){
@@ -1051,15 +1105,17 @@ public class TutorialIsland extends AbstractScript{
 								},2400);
 							}
 						}
-						while(getDialogues().canContinue()){//getPlayerSettings().getConfig(POLL_OPEN) == 0){
-							getDialogues().clickContinue();
-							sleep(300,500);
+						if(getDialogues().canContinue()){
+							while(getDialogues().canContinue() || getPlayerSettings().getConfig(POLL_OPEN) == 0){
+								getDialogues().clickContinue();
+								sleep(300,500);
+							}
 						}
 						log("Poll config: " + getPlayerSettings().getConfig(POLL_OPEN));
 					}
 					sleep(300,500);
 					if(getPlayerSettings().getConfig(POLL_OPEN) > 0){
-						WidgetChild bar = getWidgets().getChildWidget(345,1);
+						WidgetChild bar = getWidgets().getChildWidget(310,1);
 						if(bar != null){
 							bar = bar.getChild(11);
 						}
@@ -1292,7 +1348,7 @@ public class TutorialIsland extends AbstractScript{
                     new InteractionEvent(button).interact();
                     break;
                 } else {
-                    getKeyboard().type(sv.finalName + "@gmail.com", true);
+                    getKeyboard().type(sv.getEmail(), true);
                     MethodProvider.sleep(300, 800);
                     getKeyboard().type(sv.pass, true);
                     return;
@@ -1385,6 +1441,7 @@ public class TutorialIsland extends AbstractScript{
 		if(!clickToContinue.isEmpty()){
 			WidgetChild wc = clickToContinue.get(0);
 			if(wc != null && wc.isVisible()){
+				log("Interacting with widget");
 				wc.interact();
 				sleep(900,1200);
 			}
@@ -1409,6 +1466,7 @@ public class TutorialIsland extends AbstractScript{
 			}
 		}
 		else{
+			log("Clicking continue");
 			getDialogues().clickContinue();
 			sleep(600,900);
 		}
