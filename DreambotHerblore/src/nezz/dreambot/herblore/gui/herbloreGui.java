@@ -65,7 +65,7 @@ public class herbloreGui extends JFrame {
 		panel.setLayout(null);
 		
 		comboBox = new JComboBox<String>();
-		comboBox.setModel(new DefaultComboBoxModel<String>(new String[] {"Identify", "Potions", "Debug"}));
+		comboBox.setModel(new DefaultComboBoxModel<String>(new String[] {"Identify", "Potions", "Debug", "Unf Potions"}));
 		comboBox.setBounds(66, 11, 76, 20);
 		panel.add(comboBox);
 		
@@ -154,6 +154,8 @@ public class herbloreGui extends JFrame {
 					var.potions = true;
 				else if(comboBox.getSelectedIndex() == 2)
 					var.debug = true;
+				else if(comboBox.getSelectedIndex() == 3)
+					var.unfPotions = true;
 				var.yourHerb = Herbs.values()[comboBox_1.getSelectedIndex()];
 				var.started = true;
 				dispose();

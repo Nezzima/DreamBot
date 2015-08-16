@@ -10,4 +10,5 @@ public class ScriptVars {
 	public boolean potions = false;
 	public boolean debug = false;
 	public boolean started = false;
+	public boolean unfPotions = false;
 }

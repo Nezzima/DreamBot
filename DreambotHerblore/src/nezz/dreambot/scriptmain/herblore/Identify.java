@@ -27,7 +27,7 @@ public class Identify extends States{
 		}
 	};
 	public String getState(){
-		if(as.getInventory().contains("Herb"))
+		if(as.getInventory().contains(sv.yourHerb.getUnnotedGrimyId()))
 			return "IDENTIFY";
 		else
 			return "BANK";
@@ -71,8 +71,8 @@ public class Identify extends States{
 			else{
 				for(int i = 0; i < 28; i++){
 					Item item = as.getInventory().getItemInSlot(i);
-					if(item != null && item.getName().equals("Herb")){
-						as.getInventory().slotInteract(i, "Identify");
+					if(item != null && item.getName().contains("Grimy")){
+						as.getInventory().slotInteract(i, "Clean");
 						MethodProvider.sleep(100,300);
 						this.updateLoot();
 					}

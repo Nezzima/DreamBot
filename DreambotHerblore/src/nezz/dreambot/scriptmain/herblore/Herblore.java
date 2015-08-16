@@ -33,6 +33,8 @@ public class Herblore extends AbstractScript{
 			states = new DebugScreens(this, sv);
 		else if(sv.potions)
 			states = new Potions(this, sv);
+		else if(sv.unfPotions)
+			states = new UnfPotions(this,sv);
 		else
 			states = null;
 		if(states == null){

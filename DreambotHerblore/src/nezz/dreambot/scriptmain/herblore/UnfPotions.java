@@ -1,12 +1,8 @@
 package nezz.dreambot.scriptmain.herblore;
 
-import java.awt.Rectangle;
-
 import nezz.dreambot.herblore.gui.ScriptVars;
 import nezz.dreambot.tools.PricedItem;
 
-import org.dreambot.api.input.event.impl.InteractionEvent;
-import org.dreambot.api.input.mouse.destination.impl.shape.RectangleDestination;
 import org.dreambot.api.methods.Calculations;
 import org.dreambot.api.methods.MethodProvider;
 import org.dreambot.api.methods.container.impl.bank.Bank;
@@ -16,16 +12,16 @@ import org.dreambot.api.utilities.impl.Condition;
 import org.dreambot.api.wrappers.widgets.WidgetChild;
 
 
-public class Potions extends States{
+public class UnfPotions extends States{
 
-	public Potions(AbstractScript as, ScriptVars sv){
+	public UnfPotions(AbstractScript as, ScriptVars sv){
 		this.as = as;
 		this.sv = sv;
 		lootList.add(new PricedItem(sv.yourPot.getName() + "(3)", as.getClient().getMethodContext(), false));
 	}
 	@Override
 	public String getMode() {
-		return "Making potions: "+ sv.yourPot.getName();
+		return "Making Unfinished potions: "+ sv.yourPot.getName();
 	}
 
 	Condition makePot = new Condition(){
@@ -40,79 +36,6 @@ public class Potions extends States{
 		int returnThis = -1;
 		this.state = getState();
 		switch(state){
-		case "Finish Potion":
-			if(as.getBank().isOpen()){
-				as.getBank().close();
-				returnThis = 600;
-				wasAnimating = false;
-			}
-			else if(wasAnimating && amIAnimating()){
-				this.updateLoot();
-				returnThis = 600;
-			}
-			else if(as.getWidgets().getWidget(309) != null && as.getWidgets().getWidget(309).getChild(2) != null){
-				Widget par = as.getWidgets().getWidget(309);
-				WidgetChild child = null;
-				if(par != null){
-					child = par.getChild(2);
-				}
-				if(child != null){
-					Rectangle r = child.getRectangle();
-					r = new Rectangle((int)r.getX() + 5, (int)r.getY() + 5, (int)r.getWidth()-5, (int)r.getHeight()-5);
-					RectangleDestination rd = new RectangleDestination(as.getClient(), r);
-					InteractionEvent ie = new InteractionEvent(rd);
-					if(ie.interact("Make All")){
-						wasAnimating = true;
-						MethodProvider.sleepUntil(new Condition(){
-							public boolean verify(){
-								return as.getLocalPlayer().getAnimation() != -1;
-							}
-						},1200);
-					}
-					else{
-						wasAnimating = false;
-					}
-					returnThis = 400;
-				}
-				else{
-					wasAnimating = false;
-					MethodProvider.log("Issues?");
-					returnThis = 1000;
-				}
-			}
-			else{
-				if(!as.getInventory().isItemSelected()){
-					as.getInventory().interact(sv.yourPot.getIngredientTwo(), "Use");
-					returnThis = 400;
-					wasAnimating = false;
-				}
-				else{
-					as.getInventory().interact(sv.yourPot.getUnfName(), "Use");
-					MethodProvider.sleepUntil(makePot,2000);
-					returnThis = 400;
-					Widget par = as.getWidgets().getWidget(309);
-					WidgetChild child = null;
-					if(par != null){
-						child = par.getChild(2);
-					}
-					if(child != null){
-						if(child.interact("Make All")){
-							wasAnimating = true;
-							MethodProvider.sleepUntil(new Condition(){
-								public boolean verify(){
-									return as.getLocalPlayer().getAnimation() != -1;
-								}
-							},1200);
-						}
-						returnThis = 400;
-					}
-					else{
-						MethodProvider.log("Issues?");
-						returnThis = 1000;
-					}
-				}
-			}
-			break;
 		case "Start Potion":
 			if(as.getBank().isOpen()){
 				as.getBank().close();
@@ -190,7 +113,7 @@ public class Potions extends States{
 			wasAnimating = false;
 			Bank bank = as.getBank();
 			if(bank.isOpen()){
-				if(as.getInventory().contains(sv.yourPot.getName() + "(3)")){
+				if(as.getInventory().contains(sv.yourPot.getUnfName())){
 					bank.depositAllItems();
 					MethodProvider.sleepUntil(new Condition(){
 						public boolean verify(){
@@ -201,11 +124,7 @@ public class Potions extends States{
 				}
 				else{
 					if(as.getInventory().isEmpty()){
-						if(bank.contains(sv.yourPot.getUnfName())){
-							MethodProvider.log("withdrawing unfinished potion");
-							bank.withdraw(sv.yourPot.getUnfName(),14);
-						}
-						else if(bank.contains(sv.yourPot.getIngredientOne())){
+						if(bank.contains(sv.yourPot.getIngredientOne())){
 							MethodProvider.log("withdrawing ingredient one");
 							bank.withdraw(sv.yourPot.getIngredientOne(), 14);
 						}
@@ -223,17 +142,6 @@ public class Potions extends States{
 						}
 						else{
 							MethodProvider.log("You don't have any vials of water!");
-							returnThis = -1;
-						}
-					}
-					else if(as.getInventory().contains(sv.yourPot.getUnfName())){
-						if(!as.getInventory().contains(sv.yourPot.getIngredientTwo())){
-							MethodProvider.log("Get ingredient two");
-							bank.withdrawAll(sv.yourPot.getIngredientTwo());
-							returnThis = 600;
-						}
-						else{
-							MethodProvider.log("You don't have any of your second ingredient!");
 							returnThis = -1;
 						}
 					}
@@ -279,19 +187,8 @@ public class Potions extends States{
 		if(as.getInventory().contains("Vial of water") || as.getInventory().contains(sv.yourPot.getIngredientOne())){
 			if(as.getInventory().contains("Vial of water") && as.getInventory().contains(sv.yourPot.getIngredientOne()))
 				return "Start Potion";
-			else {
-				if(as.getInventory().contains("Vial of water") && as.getInventory().contains(sv.yourPot.getUnfName()) && as.getInventory().contains(sv.yourPot.getIngredientTwo()))
-					return "Finish Potion";
+			else
 				return "Bank";
-			}
-		}
-		else if(as.getInventory().contains(sv.yourPot.getUnfName())){
-			if(as.getInventory().contains(sv.yourPot.getIngredientTwo())){
-				return "Finish Potion";
-			}
-			else{
-				return "Bank";
-			}
 		}
 		else
 			return "Bank";
