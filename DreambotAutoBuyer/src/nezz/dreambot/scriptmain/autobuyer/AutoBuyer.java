@@ -7,13 +7,20 @@ import nezz.dreambot.autobuyer.gui.ScriptVars;
 import nezz.dreambot.autobuyer.gui.buyerGui;
 import nezz.dreambot.tools.PricedItem;
 
+import org.dreambot.api.Client;
 import org.dreambot.api.methods.Calculations;
+import org.dreambot.api.methods.container.impl.Inventory;
 import org.dreambot.api.methods.container.impl.Shop;
 import org.dreambot.api.methods.filter.Filter;
+import org.dreambot.api.methods.interactive.NPCs;
+import org.dreambot.api.methods.interactive.Players;
 import org.dreambot.api.methods.world.World;
+import org.dreambot.api.methods.world.Worlds;
+import org.dreambot.api.methods.worldhopper.WorldHopper;
 import org.dreambot.api.script.AbstractScript;
 import org.dreambot.api.script.Category;
 import org.dreambot.api.script.ScriptManifest;
+import org.dreambot.api.utilities.Sleep;
 import org.dreambot.api.utilities.Timer;
 import org.dreambot.api.utilities.impl.Condition;
 import org.dreambot.api.wrappers.interactive.NPC;
@@ -62,8 +69,8 @@ public class AutoBuyer extends AbstractScript{
 				e.printStackTrace();
 			}
 		}
-		startGP = getInventory().count("Coins");
-		sv.item = new PricedItem(sv.itemName, getClient().getMethodContext(), true);
+		startGP = Inventory.count("Coins");
+		sv.item = new PricedItem(sv.itemName, true);
 		timer = new Timer();
 		started = true;
 	}
@@ -75,24 +82,24 @@ public class AutoBuyer extends AbstractScript{
 	private int getHopWorld(){
 		int hopTo = 0;
 		if(sv.f2p){
-			World[] worlds = getWorlds().getAll(new Filter<World>(){
+			List<World> worlds = Worlds.all(new Filter<World>(){
 				public boolean match(World w){
 					if(!w.isF2P() || w.isPVP() || w.isHighRisk())
 						return false;
 					return true;
 				}
 			});
-			hopTo = getWorlds().getRandomWorld(worlds).getID();
+			hopTo = Worlds.getRandomWorld(worlds).getWorld();
 		}
 		else{
-			World[] worlds = getWorlds().getAll(new Filter<World>(){
+			List<World> worlds = Worlds.all(new Filter<World>(){
 				public boolean match(World w){
 					if(w.isF2P() || w.isPVP() || w.isHighRisk())
 						return false;
 					return true;
 				}
 			});
-			hopTo = getWorlds().getRandomWorld(worlds).getID();
+			hopTo = Worlds.getRandomWorld(worlds).getWorld();
 		}
 		return hopTo;
 	}
@@ -100,11 +107,11 @@ public class AutoBuyer extends AbstractScript{
 	@Override
 	public int onLoop() {
 		//Check if you're logged in, if you aren't cut out and sleep for a bit.
-		if(!getClient().isLoggedIn()){
+		if(!Client.isLoggedIn()){
 			return Calculations.random(300,500);
 		}
 		//calculate gp used, if you don't have enough gold to go another minute kill script.
-		int gp = getInventory().count("Coins");
+		int gp = Inventory.count("Coins");
 		int gpPerMin = (timer.getHourlyRate((int)startGP - gp)/60)/6;
 		if(gp > 0 && gp < gpPerMin && gpPerMin > 0){
 			log("You can't last another minute: " + gpPerMin);
@@ -112,10 +119,8 @@ public class AutoBuyer extends AbstractScript{
 			stop();
 			return -1;
 		}
-		//Set Shop to a variablef or less typing
-		final Shop s = getShop();
 		//if you're moving and your destination is still far away, return and sleep
-		if(getPlayers().myPlayer().isMoving() && getClient().getDestination() != null && getClient().getDestination().distance(getPlayers().myPlayer().getTile()) > 3)
+		if(Players.getLocal().isMoving() && Client.getDestination() != null && Client.getDestination().distance(Players.getLocal().getTile()) > 3)
 			return Calculations.random(200,300);
 		//start actual script stuff
 		//get state
@@ -130,27 +135,27 @@ public class AutoBuyer extends AbstractScript{
 			//if you're actually hopping worlds, do stuff
 			if(sv.hopWorlds){
 				//if shop is open close it.
-				if(s.isOpen()){
-					s.close();
-					sleepUntil(new Condition(){
+				if(Shop.isOpen()){
+					Shop.close();
+					Sleep.sleepUntil(new Condition(){
 						public boolean verify(){
-							return !s.isOpen();
+							return !Shop.isOpen();
 						}
 					},1200);
 				}
 				//find a world to hop to
 				int hopTo = getHopWorld();
 				//while the hopping to world is the same as your world, keep finding a new one
-				while(hopTo == getClient().getCurrentWorld()){
+				while(hopTo == Client.getCurrentWorld()){
 					hopTo = getHopWorld();
 				}
 				//Quickhop to the world.
 				log("Hopping to: " + hopTo);
-				getWorldHopper().quickHop(hopTo);
+				WorldHopper.quickHop(hopTo);
 				//sleep until the login handler is solving.
-				sleepUntil(new Condition(){
+				Sleep.sleepUntil(new Condition(){
 					public boolean verify(){
-						return getClient().getInstance().getScriptManager().getCurrentScript().getRandomManager().isSolving();
+						return Client.getInstance().getScriptManager().getCurrentScript().getRandomManager().isSolving();
 					}
 				},30000);
 			}
@@ -173,9 +178,9 @@ public class AutoBuyer extends AbstractScript{
 			 * Then it'll search for the item.
 			 */
 			//if shop isn't open, try to open it.
-			if(!s.isOpen()){
+			if(!Shop.isOpen()){
 				NPC shopper = null;
-				List<NPC> npcs = getNpcs().all();
+				List<NPC> npcs = NPCs.all();
 				for(NPC n : npcs){
 					if(shopFilter.match(n)){
 						shopper = n;
@@ -186,17 +191,17 @@ public class AutoBuyer extends AbstractScript{
 					shopper.interact("Trade");
 				}
 				//sleep until it's open.
-				sleepUntil(new Condition(){
+				Sleep.sleepUntil(new Condition(){
 					@Override
 					public boolean verify() {
-						return s.isOpen();
+						return Shop.isOpen();
 					}
 				},Calculations.random(1500,2500));
 			}
 			else{
 				//validate will guarantee the items in the shop are updated.
 				//get the item from the shop
-				Item pack = s.get(sv.itemName);
+				Item pack = Shop.get(sv.itemName);
 				//calculate buy amount based on min amount and current item amount
 				int buyAmt = pack.getAmount() - sv.minAmt;
 				//if it's not null and the amount is greater than min amount, buy it.
@@ -208,10 +213,10 @@ public class AutoBuyer extends AbstractScript{
 						buyAmt++;
 					buyAmt = buyAmt*10;
 					//buy the item.
-					s.purchase(pack, buyAmt);
+					Shop.purchase(pack, buyAmt);
 				}
 				//check if the item is null or the amount is less than your min amount.
-				pack = s.get(sv.itemName);
+				pack = Shop.get(sv.itemName);
 				if((pack == null || pack.getAmount() <= sv.minAmt) && sv.hopWorlds)
 					hoppingWorlds = true;
 				//sv.item.update();
@@ -226,7 +231,7 @@ public class AutoBuyer extends AbstractScript{
 	private int lastProfit = 0;
 	public int getProfit(){
 		//if you're not logged in or the item amount is 0, return lastProfit
-		if(!getClient().isLoggedIn() || getInventory().count(sv.item.getName()) <= 0 || getInventory().count("Coins") <= 0){
+		if(!Client.isLoggedIn() || Inventory.count(sv.item.getName()) <= 0 || Inventory.count("Coins") <= 0){
 			return lastProfit;
 		}
 		//if lastProfit is 0 or 600ms has passed since last update, update lastProfit
@@ -236,7 +241,7 @@ public class AutoBuyer extends AbstractScript{
 			//get current value of the items
 			int currValue = sv.item.getValue();
 			//get spent gold
-			int spent = (int)startGP - getInventory().count("Coins");
+			int spent = (int)startGP - Inventory.count("Coins");
 			//get profit
 			lastProfit = currValue - spent;
 			//update the timer

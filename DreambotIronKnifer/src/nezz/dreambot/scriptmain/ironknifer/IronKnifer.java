@@ -7,13 +7,22 @@ import java.awt.Rectangle;
 
 import nezz.dreambot.tools.PricedItem;
 
+import org.dreambot.api.input.Mouse;
 import org.dreambot.api.methods.Calculations;
+import org.dreambot.api.methods.container.impl.Inventory;
+import org.dreambot.api.methods.container.impl.bank.Bank;
 import org.dreambot.api.methods.container.impl.bank.BankType;
 import org.dreambot.api.methods.filter.Filter;
+import org.dreambot.api.methods.input.Camera;
+import org.dreambot.api.methods.interactive.GameObjects;
+import org.dreambot.api.methods.interactive.Players;
+import org.dreambot.api.methods.map.Map;
 import org.dreambot.api.methods.map.Tile;
+import org.dreambot.api.methods.walking.impl.Walking;
 import org.dreambot.api.script.AbstractScript;
 import org.dreambot.api.script.Category;
 import org.dreambot.api.script.ScriptManifest;
+import org.dreambot.api.utilities.Sleep;
 import org.dreambot.api.utilities.Timer;
 import org.dreambot.api.utilities.impl.Condition;
 import org.dreambot.api.wrappers.interactive.GameObject;
@@ -37,21 +46,21 @@ public class IronKnifer extends AbstractScript{
 	}
 	
 	private State getState(){
-		if(getInventory().contains("Iron bar")){
+		if(Inventory.contains("Iron bar")){
 			return State.SMITH;
 		}
 		return State.BANK;
 	}
 	
 	public void onStart(){
-		as = new AnvilSmith(getClient().getMethodContext());
-		ironKnife = new PricedItem("Iron knife",getClient().getMethodContext(), false);
+		as = new AnvilSmith();
+		ironKnife = new PricedItem("Iron knife",false);
 		t = new Timer();
 	}
 	
 	private Point getRandomPoint(Tile t){
 		Point point = null;
-		Point p = getMap().tileToMiniMap(t);
+		Point p = Map.tileToMiniMap(t);
 		if(p.x > 0)
 			point = randomizePoint(p);
 		return point;
@@ -60,29 +69,27 @@ public class IronKnifer extends AbstractScript{
 		return new Point(p.x + Calculations.random(-5,5), p.y + Calculations.random(-5,5));
 	}
 	private Rectangle getRect(Tile t){
-		Point p = getMap().tileToMiniMap(t);
+		Point p = Map.tileToMiniMap(t);
 		return new Rectangle(p.x-5, p.y-5, 10,10);
 	}
 	
 	private boolean walk(Tile t){
-		getClient().disableIdleCamera();
 		Point p = getRandomPoint(t);
 		if(p == null)
 			return false;
-		getMouse().move(p);
+		Mouse.move(p);
 		sleep(60,150);
-		getMouse().click();
-		sleepUntil(new Condition(){
+		Mouse.click();
+		Sleep.sleepUntil(new Condition(){
 			public boolean verify(){
-				return getLocalPlayer().isMoving();
+				return Players.getLocal().isMoving();
 			}
 		}, 1200);
-		getClient().enableIdleCamera();
-		return getLocalPlayer().isMoving();
+		return Players.getLocal().isMoving();
 	}
 	private GameObject getBankBooth(){
 		if(bankBooth == null || System.currentTimeMillis() - boothUpdate > 5000){
-			bankBooth = getGameObjects().closest(new Filter<GameObject>(){
+			bankBooth = GameObjects.closest(new Filter<GameObject>(){
 				public boolean match(GameObject go){
 					if(go == null || !go.exists() || go.getName() == null)
 						return false;
@@ -97,11 +104,11 @@ public class IronKnifer extends AbstractScript{
 		return bankBooth;
 	}
 	private boolean waitForWalk(){
-		if(!getLocalPlayer().isMoving() || state == null){
+		if(!Players.getLocal().isMoving() || state == null){
 			return false;
 		}
-		Tile destination = getWalking().getDestination();
-		if(destination != null && destination.distance(getLocalPlayer()) < Calculations.random(3,6)){
+		Tile destination = Walking.getDestination();
+		if(destination != null && destination.distance(Players.getLocal()) < Calculations.random(3,6)){
 			return false;
 		}
 		if(state.equals(State.BANK) && getBankBooth() != null && getBankBooth().isOnScreen()){
@@ -114,7 +121,7 @@ public class IronKnifer extends AbstractScript{
 	}
 	
 	private String getCameraDirection(){
-		int yaw = getCamera().getYaw();
+		int yaw = Camera.getYaw();
 		if(yaw > 1800 || yaw < 300)
 			return "N";
 		else if(yaw >= 300 && yaw < 800){
@@ -146,7 +153,7 @@ public class IronKnifer extends AbstractScript{
 			};
 		}
 		else{
-			Rectangle temp = getLocalPlayer().getBoundingBox();
+			Rectangle temp = Players.getLocal().getBoundingBox();
 			r = new Rectangle(temp.x - 50, temp.y - 50, temp.height + 100, temp.width + 100);
 		}
 		return r;
@@ -155,8 +162,8 @@ public class IronKnifer extends AbstractScript{
 	
 	@Override
 	public int onLoop() {
-		if(!getWalking().isRunEnabled() && getWalking().getRunEnergy() > runThresh){
-			getWalking().toggleRun();
+		if(!Walking.isRunEnabled() && Walking.getRunEnergy() > runThresh){
+			Walking.toggleRun();
 			runThresh = Calculations.random(30,70);
 		}
 		if(waitForWalk())
@@ -165,38 +172,38 @@ public class IronKnifer extends AbstractScript{
 		switch(state){
 		case BANK:
 			movedAnvil = false;
-			if(!getBank().isOpen()){
-				if(BANK_TILE.distance(getLocalPlayer()) > 5 && !getLocalPlayer().isMoving()){
+			if(!Bank.isOpen()){
+				if(BANK_TILE.distance(Players.getLocal()) > 5 && !Players.getLocal().isMoving()){
 					walk(BANK_TILE);
 				}
-				else if(!getLocalPlayer().isMoving()){
-					getBank().open();
-					sleepUntil(new Condition(){
+				else if(!Players.getLocal().isMoving()){
+					Bank.open();
+					Sleep.sleepUntil(new Condition(){
 						public boolean verify(){
-							return getBank().isOpen();
+							return Bank.isOpen();
 						}
 					},3600);
 				}
 				else if(!movedBank){
-					getMouse().move(getHoverSpot());
+					Mouse.move(getHoverSpot());
 					movedBank = true;
 				}
 			}
 			else{
-				if(getInventory().contains("Iron knife")){
+				if(Inventory.contains("Iron knife")){
 					ironKnife.update();
-					getBank().depositAllExcept("Hammer");
-					sleepUntil(new Condition(){
+					Bank.depositAllExcept("Hammer");
+					Sleep.sleepUntil(new Condition(){
 						public boolean verify(){
-							return !getInventory().contains("Iron knife");
+							return !Inventory.contains("Iron knife");
 						}
 					},1200);
 				}
-				else if(getBank().contains("Iron bar")){
-					getBank().withdrawAll("Iron bar");
-					sleepUntil(new Condition(){
+				else if(Bank.contains("Iron bar")){
+					Bank.withdrawAll("Iron bar");
+					Sleep.sleepUntil(new Condition(){
 						public boolean verify(){
-							return getInventory().contains("Iron bar");
+							return Inventory.contains("Iron bar");
 						}
 					},1200);
 				}
@@ -208,38 +215,38 @@ public class IronKnifer extends AbstractScript{
 			break;
 		case SMITH:
 			movedBank = false;
-			if(as.isOpen() || getInventory().isItemSelected() || !amIAnimating()){
+			if(as.isOpen() || Inventory.isItemSelected() || !amIAnimating()){
 				if(as.isOpen()){
 					as.makeKnife();
-					sleepUntil(new Condition(){
+					Sleep.sleepUntil(new Condition(){
 						public boolean verify(){
 							return !as.isOpen();
 						}
 					},1200);
 				}
 				else{
-					if(ANVIL_TILE.distance(getLocalPlayer()) > 5 && !getLocalPlayer().isMoving()){
+					if(ANVIL_TILE.distance(Players.getLocal()) > 5 && !Players.getLocal().isMoving()){
 						walk(ANVIL_TILE);
-						/*getWalking().walk(ANVIL_TILE);
-						sleepUntil(new Condition(){
+						/*Walking.walk(ANVIL_TILE);
+						Sleep.sleepUntil(new Condition(){
 							public boolean verify(){
-								return getLocalPlayer().isMoving();
+								return Players.getLocal().isMoving();
 							}
 						},1200);*/
-						Tile dest = getWalking().getDestination();
+						Tile dest = Walking.getDestination();
 						if(dest != null && dest.distance(ANVIL_TILE) < 4){
-							if(!getInventory().isItemSelected()){
+							if(!Inventory.isItemSelected()){
 								sleep(400,1400);
-								getInventory().interact("Iron bar","Use");
+								Inventory.interact("Iron bar","Use");
 							}
 						}
 					}
 					else{
-						if(getInventory().isItemSelected()){
-							if(!getLocalPlayer().isMoving()){
+						if(Inventory.isItemSelected()){
+							if(!Players.getLocal().isMoving()){
 								if(as.getAnvil() != null){
 									as.getAnvil().interact("Use");
-									sleepUntil(new Condition(){
+									Sleep.sleepUntil(new Condition(){
 										public boolean verify(){
 											return as.isOpen();
 										}
@@ -247,15 +254,15 @@ public class IronKnifer extends AbstractScript{
 								}
 							}
 							else if(!movedAnvil){
-								getMouse().move(getHoverSpot());
+								Mouse.move(getHoverSpot());
 								movedAnvil = true;
 							}
 						}
 						else{
-							getInventory().interact("Iron bar", "Use");
-							sleepUntil(new Condition(){
+							Inventory.interact("Iron bar", "Use");
+							Sleep.sleepUntil(new Condition(){
 								public boolean verify(){
-									return getInventory().isItemSelected();
+									return Inventory.isItemSelected();
 								}
 							},1200);
 						}
@@ -273,14 +280,14 @@ public class IronKnifer extends AbstractScript{
 	
 	public boolean amIAnimating(){
 		if(System.currentTimeMillis() - lastAnimated > 5000){
-			if(getLocalPlayer().getAnimation() != -1){
+			if(Players.getLocal().getAnimation() != -1){
 				lastAnimated = System.currentTimeMillis();
 				return true;
 			}
 			return false;
 		}
 		for(int i = 0; i < 20; i++){
-			if(getLocalPlayer().getAnimation() != -1){
+			if(Players.getLocal().getAnimation() != -1){
 				lastAnimated = System.currentTimeMillis();
 				return true;
 			}

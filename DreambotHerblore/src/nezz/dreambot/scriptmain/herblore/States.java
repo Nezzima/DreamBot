@@ -8,6 +8,8 @@ import nezz.dreambot.herblore.gui.ScriptVars;
 import nezz.dreambot.tools.PricedItem;
 
 import org.dreambot.api.methods.skills.Skill;
+import org.dreambot.api.methods.skills.SkillTracker;
+import org.dreambot.api.methods.skills.Skills;
 import org.dreambot.api.script.AbstractScript;
 
 public abstract class States {
@@ -25,9 +27,9 @@ public abstract class States {
 		baseY+=15;
 		g.drawString("Current state: " + getCurrentState(), 10, baseY);
 		baseY+=15;
-		g.drawString("Experience(p/h): " + as.getSkillTracker().getGainedExperience(Skill.HERBLORE) + "(" + as.getSkillTracker().getGainedExperiencePerHour(Skill.HERBLORE) + ")", 10, baseY);
+		g.drawString("Experience(p/h): " + SkillTracker.getGainedExperience(Skill.HERBLORE) + "(" + SkillTracker.getGainedExperiencePerHour(Skill.HERBLORE) + ")", 10, baseY);
 		baseY+=15;
-		g.drawString("Level(gained): " + as.getSkills().getRealLevel(Skill.HERBLORE) + "(" + as.getSkillTracker().getGainedLevels(Skill.HERBLORE) + ")", 10, baseY);
+		g.drawString("Level(gained): " + Skills.getRealLevel(Skill.HERBLORE) + "(" + SkillTracker.getGainedLevels(Skill.HERBLORE) + ")", 10, baseY);
 		baseY+=15;
 		for(PricedItem pi : lootList){
 			if(pi != null && pi.getAmount() > 0){

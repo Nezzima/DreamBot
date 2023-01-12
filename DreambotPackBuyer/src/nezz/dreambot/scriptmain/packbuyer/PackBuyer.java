@@ -7,8 +7,12 @@ import nezz.dreambot.packbuyer.gui.buyerGui;
 import nezz.dreambot.tools.PricedItem;
 import nezz.dreambot.tools.RunTimer;
 
+import org.dreambot.api.Client;
 import org.dreambot.api.methods.Calculations;
+import org.dreambot.api.methods.container.impl.Inventory;
 import org.dreambot.api.methods.container.impl.Shop;
+import org.dreambot.api.methods.interactive.Players;
+import org.dreambot.api.methods.worldhopper.WorldHopper;
 import org.dreambot.api.script.AbstractScript;
 import org.dreambot.api.script.Category;
 import org.dreambot.api.script.ScriptManifest;
@@ -33,12 +37,12 @@ public class PackBuyer extends AbstractScript{
 	}
 
 	private State getState(){
-		if(getInventory().contains(sv.packName)){
+		if(Inventory.contains(sv.packName)){
 			return State.OPEN_PACKS;
 		}
 		if(hopWorlds)
 			return State.HOP;
-		if(getInventory().contains(sv.packName)){
+		if(Inventory.contains(sv.packName)){
 			return State.OPEN_PACKS;
 		}
 		else
@@ -58,7 +62,7 @@ public class PackBuyer extends AbstractScript{
 
 		String itemName = sv.packName.replace(" pack", "");
 		log(itemName);
-		feathers = new PricedItem(itemName, getClient().getMethodContext(), false);
+		feathers = new PricedItem(itemName, false);
 		timer = new RunTimer();
 		started = true;
 	}
@@ -66,22 +70,21 @@ public class PackBuyer extends AbstractScript{
 	@Override
 	public int onLoop() {
 		log("looping");
-		final Shop s = getShop();
 		if(feathers == null){
 			String itemName = sv.packName.replace(" pack", "");
 			log(itemName);
-			feathers = new PricedItem(itemName, getClient().getMethodContext(), false);
+			feathers = new PricedItem(itemName, false);
 		}
-		if(getPlayers().myPlayer().isMoving() && getClient().getDestination() != null && getClient().getDestination().distance(getPlayers().myPlayer().getTile()) > 3)
+		if(Players.getLocal().isMoving() && Client.getDestination() != null && Client.getDestination().distance(Players.getLocal().getTile()) > 3)
 			return Calculations.random(200,300);
 		state = getState();
 		switch(state){
 		case HOP:
 			if(sv.hopWorlds){
 				int hopTo = f2pWorlds[Calculations.random(0,f2pWorlds.length-1)];
-				while(hopTo == getClient().getCurrentWorld())
+				while(hopTo == Client.getCurrentWorld())
 					hopTo = f2pWorlds[Calculations.random(0,f2pWorlds.length-1)];
-				getWorldHopper().hopWorld(hopTo);
+				WorldHopper.hopWorld(hopTo);
 			}
 			else{
 				try {
@@ -93,24 +96,15 @@ public class PackBuyer extends AbstractScript{
 			hopWorlds = false;
 			break;
 		case BUY:
-			if(!s.isOpen()){
-				s.open();
-				waitFor(new Condition(){
-					@Override
-					public boolean verify() {
-						return s.isOpen();
-					}
-				},1500);
+			if(!Shop.isOpen()){
+				Shop.open();
+				waitFor(() -> Shop.isOpen(),1500);
 			}
 			else{
-				Item pack = s.get(sv.packName);
+				Item pack = Shop.get(sv.packName);
 				if(pack != null && pack.getAmount() > sv.minAmt){
-					s.purchase(pack, 10);
-					waitFor(new Condition(){
-						public boolean verify(){
-							return getInventory().contains(sv.packName);
-						}
-					},1000);
+					Shop.purchase(pack, 10);
+					waitFor(() -> Inventory.contains(sv.packName),1000);
 				}
 				else{
 					try {
@@ -119,20 +113,20 @@ public class PackBuyer extends AbstractScript{
 						e.printStackTrace();
 					}
 				}
-				pack = s.get(sv.packName);
+				pack = Shop.get(sv.packName);
 				if(pack == null || pack.getAmount() <= sv.minAmt/2)
 					hopWorlds = true;
 			}
 			break;
 		case OPEN_PACKS:
-			if(s.isOpen()){
-				s.close();
+			if(Shop.isOpen()){
+				Shop.close();
 			}
 			else{
 				for(int i = 0; i < 28; i++){
-					Item it = getInventory().getItemInSlot(i);
+					Item it = Inventory.getItemInSlot(i);
 					if(it != null && it.getName().equals(sv.packName)){
-						getInventory().slotInteract(i, "Open");
+						Inventory.slotInteract(i, "Open");
 						try {
 							Thread.sleep(Calculations.random(100,150));
 						} catch (InterruptedException e) {

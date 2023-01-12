@@ -6,7 +6,11 @@ import java.util.List;
 
 import nezz.dreambot.herblore.gui.ScriptVars;
 
+import org.dreambot.api.methods.container.impl.Inventory;
+import org.dreambot.api.methods.container.impl.bank.Bank;
 import org.dreambot.api.methods.skills.Skill;
+import org.dreambot.api.methods.skills.Skills;
+import org.dreambot.api.methods.trade.Trade;
 import org.dreambot.api.script.AbstractScript;
 import org.dreambot.api.wrappers.items.Item;
 
@@ -28,15 +32,15 @@ public class DebugScreens extends States{
 
 	@Override
 	public int execute() {
-		if(as.getTrade().isOpen()){
-			trade = as.getTrade().getItems(false);
+		if(Trade.isOpen()){
+			trade = Trade.getItems(false);
 			drawTrade = true;
 		}
 		else
 			drawTrade = false;
-		if(as.getBank().isOpen()){
+		if(Bank.isOpen()){
 			drawBank = true;
-			bank = as.getBank().all();
+			bank = Bank.all();
 		}
 		else
 			drawBank = false;
@@ -58,7 +62,7 @@ public class DebugScreens extends States{
 		for(int i = 0; i < 28; i++){
 			boolean clean = false;
 			g.setColor(Color.green);
-			Item item = as.getInventory().getItemInSlot(i);
+			Item item = Inventory.getItemInSlot(i);
 			if(item != null){
 				Herbs h = null;
 				for(Herbs herb : Herbs.values()){
@@ -77,7 +81,7 @@ public class DebugScreens extends States{
 				if(h != null){
 					g.setColor(color);
 					g.fillRect(400, baseY-13, 150, 15);
-					if(!h.canIdHerb(as.getSkills().getBoostedLevels(Skill.HERBLORE)) && !clean){
+					if(!h.canIdHerb(Skill.HERBLORE.getBoostedLevel()) && !clean){
 						g.setColor(Color.red);
 					}
 					else if(clean){
@@ -121,7 +125,7 @@ public class DebugScreens extends States{
 				if(h != null){
 					g.setColor(color);
 					g.fillRect(400, baseY-13, 150, 15);
-					if(!h.canIdHerb(as.getSkills().getBoostedLevels(Skill.HERBLORE)) && !clean){
+					if(!h.canIdHerb(Skill.HERBLORE.getBoostedLevel()) && !clean){
 						g.setColor(Color.red);
 					}
 					else if(clean){
@@ -164,7 +168,7 @@ public class DebugScreens extends States{
 				if(h != null){
 					g.setColor(color);
 					g.fillRect(400, baseY-13, 150, 15);
-					if(!h.canIdHerb(as.getSkills().getBoostedLevels(Skill.HERBLORE)) && !clean){
+					if(!h.canIdHerb(Skill.HERBLORE.getBoostedLevel()) && !clean){
 						g.setColor(Color.red);
 					}
 					else if(clean){

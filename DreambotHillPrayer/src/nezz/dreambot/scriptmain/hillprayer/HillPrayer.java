@@ -1,11 +1,20 @@
 package nezz.dreambot.scriptmain.hillprayer;
 
+import org.dreambot.api.Client;
 import org.dreambot.api.methods.Calculations;
+import org.dreambot.api.methods.container.impl.Inventory;
 import org.dreambot.api.methods.filter.Filter;
+import org.dreambot.api.methods.interactive.NPCs;
+import org.dreambot.api.methods.interactive.Players;
+import org.dreambot.api.methods.item.GroundItems;
 import org.dreambot.api.methods.skills.Skill;
+import org.dreambot.api.methods.skills.SkillTracker;
+import org.dreambot.api.methods.skills.Skills;
+import org.dreambot.api.methods.walking.impl.Walking;
 import org.dreambot.api.script.AbstractScript;
 import org.dreambot.api.script.Category;
 import org.dreambot.api.script.ScriptManifest;
+import org.dreambot.api.utilities.Sleep;
 import org.dreambot.api.utilities.Timer;
 import org.dreambot.api.utilities.impl.Condition;
 import org.dreambot.api.wrappers.interactive.NPC;
@@ -23,15 +32,15 @@ public class HillPrayer extends AbstractScript {
 	}
 	
 	private State getState(){
-		if(getLocalPlayer().isInCombat()){
+		if(Players.getLocal().isInCombat()){
 			return State.SLEEP;
 		}
 		else{
-			GroundItem gi = getGroundItems().closest("Big bones", "Limpwurt root");
+			GroundItem gi = GroundItems.closest("Big bones", "Limpwurt root");
 			if(gi != null){
 				return State.LOOT;
 			}
-			else if(getInventory().contains("Big bones")){
+			else if(Inventory.contains("Big bones")){
 				return State.BURY;
 			}
 			else
@@ -43,51 +52,51 @@ public class HillPrayer extends AbstractScript {
 	
 	@Override
 	public void onStart() {
-		getSkillTracker().start(Skill.PRAYER);
+		SkillTracker.start(Skill.PRAYER);
 	}
 
 	@Override
 	public int onLoop() {
-		if (!getClient().isLoggedIn()) {
+		if (!Client.isLoggedIn()) {
 			return 600;
 		}
 		state = getState();
 		switch(state){
 		case BURY:
-			getInventory().interact("Big bones", "Bury");
+			Inventory.interact("Big bones", "Bury");
 			sleep(600,900);
 			break;
 		case KILL:
-			if(getLocalPlayer().isInCombat()){
+			if(Players.getLocal().isInCombat()){
 				return Calculations.random(300,600);
 			}
-			NPC giant = getNpcs().closest(new Filter<NPC>(){
+			NPC giant = NPCs.closest(new Filter<NPC>(){
 				public boolean match(NPC n){
 					if(n == null || n.getName() == null || !n.getName().equals("Hill Giant"))
 						return false;
-					if(n.isInCombat() && (n.getInteractingCharacter() == null || !n.getInteractingCharacter().getName().equals(getLocalPlayer().getName())))
+					if(n.isInCombat() && (n.getInteractingCharacter() == null || !n.getInteractingCharacter().getName().equals(Players.getLocal().getName())))
 							return false;
 					return true;
 				}
 			});
 			if(giant != null){
 				giant.interact("Attack");
-				sleepUntil(new Condition(){
+				Sleep.sleepUntil(new Condition(){
 					public boolean verify(){
-						return getLocalPlayer().isInCombat();
+						return Players.getLocal().isInCombat();
 					}
 				}, 2000);
 			}
 			break;
 		case LOOT:
-			GroundItem gi = getGroundItems().closest("Big bones", "Limpwurt root");
+			GroundItem gi = GroundItems.closest("Big bones", "Limpwurt root");
 			if(gi != null){
 				if(gi.isOnScreen()){
 					gi.interact("Take");
 					sleep(900,1200);
 				}
 				else{
-					getWalking().walk(gi.getTile());
+					Walking.walk(gi.getTile());
 				}
 			}
 			break;
@@ -102,8 +111,8 @@ public class HillPrayer extends AbstractScript {
 		g.setColor(Color.WHITE);
 		g.setFont(new Font("Arial", 1, 11));
 		g.drawString("Time Running: " + t.formatTime(), 25, 50);
-		g.drawString("Experience(p/h): " + getSkillTracker().getGainedExperience(Skill.PRAYER) + "(" + getSkillTracker().getGainedExperiencePerHour(Skill.PRAYER) + ")", 25, 65);
-		g.drawString("Level(gained): " + getSkills().getRealLevel(Skill.PRAYER) +"(" + getSkillTracker().getGainedLevels(Skill.PRAYER) + ")", 25, 80);
+		g.drawString("Experience(p/h): " + SkillTracker.getGainedExperience(Skill.PRAYER) + "(" + SkillTracker.getGainedExperiencePerHour(Skill.PRAYER) + ")", 25, 65);
+		g.drawString("Level(gained): " + Skills.getRealLevel(Skill.PRAYER) +"(" + SkillTracker.getGainedLevels(Skill.PRAYER) + ")", 25, 80);
 		if(state != null)
 			g.drawString("State: " + state.toString(), 25, 95);
 	}

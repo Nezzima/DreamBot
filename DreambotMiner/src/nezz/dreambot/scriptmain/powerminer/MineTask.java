@@ -1,17 +1,19 @@
 package nezz.dreambot.scriptmain.powerminer;
 
-import java.util.List;
-
 import nezz.dreambot.tools.PricedItem;
-
-import org.dreambot.api.methods.MethodContext;
+import org.dreambot.api.methods.container.impl.bank.Bank;
 import org.dreambot.api.methods.container.impl.bank.BankLocation;
 import org.dreambot.api.methods.filter.Filter;
+import org.dreambot.api.methods.interactive.GameObjects;
+import org.dreambot.api.methods.interactive.Players;
 import org.dreambot.api.methods.map.Tile;
 import org.dreambot.api.methods.skills.Skill;
+import org.dreambot.api.methods.skills.Skills;
 import org.dreambot.api.utilities.Timer;
 import org.dreambot.api.wrappers.interactive.GameObject;
 import org.dreambot.api.wrappers.items.Item;
+
+import java.util.List;
 
 public class MineTask {
 	private String goal = "";
@@ -20,7 +22,6 @@ public class MineTask {
 	private boolean powermine = false;
 	private Timer t;
 	private String oreName = "";
-	private MethodContext ctx;
 	private PricedItem oreTracker;
 	private BankLocation bank;
 	private boolean finished = false;
@@ -39,20 +40,19 @@ public class MineTask {
 			}
 			if(!hasID)
 				return false;
-			if(dontMove() && go.distance(ctx.getLocalPlayer()) > 1)
+			if(dontMove() && go.distance(Players.getLocal()) > 1)
 				return false;
 			return true;
 		}
 	};
 	
-	public MineTask(MethodContext ctx, String oreName, int[] ids, Tile startTile, String goal, boolean powermine, BankLocation bank, boolean dontMove){
-		this.ctx = ctx;
+	public MineTask(String oreName, int[] ids, Tile startTile, String goal, boolean powermine, BankLocation bank, boolean dontMove){
 		this.oreName = oreName;
 		this.ids = ids;
 		this.startTile = startTile;
 		this.goal = goal;
 		this.powermine = powermine;
-		this.oreTracker = new PricedItem(oreName, ctx, false);
+		this.oreTracker = new PricedItem(oreName, false);
 		this.bank = bank;
 		this.dontMove = dontMove;
 		t = new Timer();
@@ -68,7 +68,7 @@ public class MineTask {
 	
 	public boolean reachedGoal(){
 		if(goal.toLowerCase().contains("bank")){
-			Item ore = ctx.getBank().get(oreName);
+			Item ore = Bank.get(oreName);
 			if(ore == null)
 				return false;
 			else{
@@ -80,7 +80,7 @@ public class MineTask {
 			}
 		}
 		else if(goal.toLowerCase().contains("level")){
-			this.finished =  ctx.getSkills().getRealLevel(Skill.MINING) >= Integer.parseInt(goal.split("=")[1]);
+			this.finished =  Skills.getRealLevel(Skill.MINING) >= Integer.parseInt(goal.split("=")[1]);
 			return finished;
 		}
 		else if(goal.toLowerCase().contains("mine")){
@@ -96,10 +96,10 @@ public class MineTask {
 		for(GameObject go : rocks){
 			if(currRock == null){
 				currRock = go;
-				dist = go.distance(ctx.getLocalPlayer());
+				dist = go.distance(Players.getLocal());
 				continue;
 			}
-			double tempDist = go.distance(ctx.getLocalPlayer());
+			double tempDist = go.distance(Players.getLocal());
 			if(tempDist < dist){
 				currRock = go;
 				dist = tempDist;
@@ -113,7 +113,7 @@ public class MineTask {
 	}
 	
 	public GameObject getRock(){
-		List<GameObject> acceptableRocks = ctx.getGameObjects().all(rockFilter);
+		List<GameObject> acceptableRocks = GameObjects.all(rockFilter);
 		return getClosest(acceptableRocks);
 	}
 	
@@ -164,9 +164,6 @@ public class MineTask {
 	}
 	public void setIDs(int[] ids){
 		this.ids = ids;
-	}
-	public void setContext(MethodContext ctx){
-		this.ctx = ctx;
 	}
 	public void setBank(BankLocation bank){
 		this.bank = bank;

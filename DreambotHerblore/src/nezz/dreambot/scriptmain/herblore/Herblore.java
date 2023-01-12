@@ -7,6 +7,7 @@ import nezz.dreambot.herblore.gui.herbloreGui;
 import nezz.dreambot.tools.RunTimer;
 
 import org.dreambot.api.methods.skills.Skill;
+import org.dreambot.api.methods.skills.SkillTracker;
 import org.dreambot.api.script.AbstractScript;
 import org.dreambot.api.script.Category;
 import org.dreambot.api.script.ScriptManifest;
@@ -40,7 +41,7 @@ public class Herblore extends AbstractScript{
 		if(states == null){
 			System.out.println("States is null?");
 		}
-		getSkillTracker().start(Skill.HERBLORE);
+		SkillTracker.start(Skill.HERBLORE);
 		timer = new RunTimer();
 		started = true;
 		log("Starting Dreambot's Herblore Script!");

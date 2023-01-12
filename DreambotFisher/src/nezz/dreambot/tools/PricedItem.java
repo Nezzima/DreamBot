@@ -1,7 +1,7 @@
 package nezz.dreambot.tools;
 
-import org.dreambot.api.methods.MethodContext;
-import org.dreambot.api.methods.MethodProvider;
+import org.dreambot.api.methods.container.impl.Inventory;
+import org.dreambot.api.utilities.Logger;
 
 public class PricedItem {
 	private String name;
@@ -9,32 +9,29 @@ public class PricedItem {
 	private int amount = 0;
 	private int price = 0;
 	private int id = 0;
-	private MethodContext ctx;
 
-	public PricedItem(String name, MethodContext ctx, boolean getPrice){
+	public PricedItem(String name, boolean getPrice){
 		this.name = name;
-		this.ctx = ctx;
-		if(ctx.getInventory().contains(name)){
-			lastCount = (int) ctx.getInventory().count(name);
+		if(Inventory.contains(name)){
+			lastCount = (int) Inventory.count(name);
 		}
 		if(getPrice){
 			String tempName = name;
 			if(name.contains("arrow"))
 				tempName+="s";
-			MethodProvider.log("Getting price");
+			Logger.log("Getting price");
 			price = PriceGrab.getInstance().getPrice(tempName, 2);
-			MethodProvider.log("Got price: " + price);
+			Logger.log("Got price: " + price);
 		}
 		else
 			price = 0;
 	}
 
-	public PricedItem(String name, int id , MethodContext ctx, boolean getPrice){
+	public PricedItem(String name, int id , boolean getPrice){
 		this.name = name;
-		this.ctx = ctx;
 		this.setId(id);
-		if(ctx.getInventory().contains(id))
-			lastCount = (int) ctx.getInventory().count(id);
+		if(Inventory.contains(id))
+			lastCount = (int) Inventory.count(id);
 		if(getPrice)
 			price = PriceGrab.getInstance().getPrice(name, 2);
 		else
@@ -44,16 +41,16 @@ public class PricedItem {
 	public void update(){
 		int increase = 0;
 		if(id==0)
-			increase =  (int) (ctx.getInventory().count(name)- lastCount);
+			increase =  (int) (Inventory.count(name)- lastCount);
 		else
-			increase =  (int) (ctx.getInventory().count(id)- lastCount);
+			increase =  (int) (Inventory.count(id)- lastCount);
 		if(increase < 0)
 			increase = 0;
 		amount+=increase;
 		if(id==0)
-			lastCount = (int) ctx.getInventory().count(name);
+			lastCount = (int) Inventory.count(name);
 		else
-			lastCount = (int) ctx.getInventory().count(id);
+			lastCount = (int) Inventory.count(id);
 	}
 
 	public void setName(String name){

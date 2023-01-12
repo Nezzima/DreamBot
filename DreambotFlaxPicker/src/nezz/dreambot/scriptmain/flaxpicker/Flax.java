@@ -4,16 +4,25 @@ import java.awt.Graphics;
 
 import nezz.dreambot.tools.PricedItem;
 
+import org.dreambot.api.Client;
+import org.dreambot.api.input.Mouse;
 import org.dreambot.api.methods.Calculations;
+import org.dreambot.api.methods.container.impl.Inventory;
+import org.dreambot.api.methods.container.impl.bank.Bank;
 import org.dreambot.api.methods.container.impl.bank.BankLocation;
+import org.dreambot.api.methods.interactive.GameObjects;
+import org.dreambot.api.methods.interactive.Players;
 import org.dreambot.api.methods.map.Area;
 import org.dreambot.api.methods.map.Tile;
+import org.dreambot.api.methods.walking.impl.Walking;
 import org.dreambot.api.script.AbstractScript;
 import org.dreambot.api.script.Category;
 import org.dreambot.api.script.ScriptManifest;
+import org.dreambot.api.utilities.Sleep;
 import org.dreambot.api.utilities.Timer;
 import org.dreambot.api.utilities.impl.Condition;
 import org.dreambot.api.wrappers.interactive.GameObject;
+import org.dreambot.api.wrappers.widgets.Menu;
 
 @ScriptManifest(author = "Nezz", category = Category.MONEYMAKING, description = "Picks flax", name = "DreamBot Flax Picker", version = 0)
 public class Flax extends AbstractScript{
@@ -30,8 +39,7 @@ public class Flax extends AbstractScript{
 	private GameObject flaxToPick = null;
 	
 	public void onStart(){
-		getClient().disableIdleCamera();
-		flax = new PricedItem("Flax", getClient().getMethodContext(), false);
+		flax = new PricedItem("Flax", false);
 		timer = new Timer();
 	}
 	private State state = null;
@@ -39,7 +47,7 @@ public class Flax extends AbstractScript{
 		PICK, BANK
 	}
 	private State getState(){
-		if(getInventory().isFull()){
+		if(Inventory.isFull()){
 			return State.BANK;
 		}
 		else
@@ -47,7 +55,7 @@ public class Flax extends AbstractScript{
 	}
 	private GameObject getFlax(){
 		if(flaxToPick == null || !flaxToPick.exists()){
-			flaxToPick = getGameObjects().closest("Flax");
+			flaxToPick = GameObjects.closest("Flax");
 		}
 		return flaxToPick;
 	}
@@ -55,11 +63,11 @@ public class Flax extends AbstractScript{
 	@Override
 	public int onLoop() {
 		flax.update();
-		if(!getWalking().isRunEnabled() && getWalking().getRunEnergy() > runThresh){
-			getWalking().toggleRun();
+		if(!Walking.isRunEnabled() && Walking.getRunEnergy() > runThresh){
+			Walking.toggleRun();
 			runThresh = Calculations.random(30,70);
 		}
-		if(!getWalking().shouldWalk(walkThresh)){
+		if(!Walking.shouldWalk(walkThresh)){
 			return Calculations.random(500,700);
 		}
 		walkThresh = Calculations.random(4,8);
@@ -67,52 +75,50 @@ public class Flax extends AbstractScript{
 		switch(state){
 		case BANK:
 			flaxToPick = null;
-			if(BankLocation.SEERS.getArea(5).contains(getLocalPlayer())){
-				if(getBank().isOpen()){
-					getBank().depositAllItems();
-					sleepUntil(new Condition(){
+			if(BankLocation.SEERS.getArea(5).contains(Players.getLocal())){
+				if(Bank.isOpen()){
+					Bank.depositAllItems();
+					Sleep.sleepUntil(new Condition(){
 						public boolean verify(){
-							return getInventory().isEmpty();
+							return Inventory.isEmpty();
 						}
 					},1200);
 				}
 				else{
-					getBank().open();
-					sleepUntil(new Condition(){
+					Bank.open();
+					Sleep.sleepUntil(new Condition(){
 						public boolean verify(){
-							return getBank().isOpen();
+							return Bank.isOpen();
 						}
 					},1200);
 				}
 			}
 			else{
-				getWalking().walk(BankLocation.SEERS.getCenter());
+				Walking.walk(BankLocation.SEERS.getCenter());
 				sleep(700,900);
 			}
 			break;
 		case PICK:
-			if(FLAX_AREA.contains(getLocalPlayer())){
-				if(getClient().getMenu().getDefaultAction().equals("Pick")){
-					getMouse().click(false);
-					sleep((int)(Calculations.random(300,400)*getClient().seededRandom()));
+			if(FLAX_AREA.contains(Players.getLocal())){
+				if(Menu.getDefaultAction().equals("Pick")){
+					Mouse.click(false);
+					sleep((int)(Calculations.random(300,400)*Client.seededRandom()));
 				}
 				else{
 					GameObject flax = getFlax();
 					if(flax != null){
-						if(!flax.getModel().getModelArea(flax).contains(getMouse().getPosition()))
-							getMouse().move(flax);
-						getMouse().click();
-						sleep((int)(Calculations.random(300,500)*getClient().seededRandom()));
+						flax.interact("Pick");
+						sleep((int)(Calculations.random(300,500)*Client.seededRandom()));
 					}
 				}
 			}
 			else{
-				getWalking().walk(FLAX_TILE);
+				Walking.walk(FLAX_TILE);
 				sleep(700,900);
 			}
 			break;
 		}
-		return (int)(Calculations.random(200,300)*getClient().seededRandom());
+		return (int)(Calculations.random(200,300)*Client.seededRandom());
 	}
 	
 	public void onPaint(Graphics g){

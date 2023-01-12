@@ -1,21 +1,26 @@
 package nezz.dreambot.scriptmain.thiever;
 
-import java.awt.Graphics;
-import java.awt.Point;
-
 import nezz.dreambot.thiever.gui.ScriptVars;
 import nezz.dreambot.thiever.gui.thieverGui;
 import nezz.dreambot.tools.RunTimer;
-
+import org.dreambot.api.input.Mouse;
+import org.dreambot.api.methods.container.impl.Inventory;
 import org.dreambot.api.methods.container.impl.bank.Bank;
-import org.dreambot.api.methods.input.mouse.destination.impl.EntityDestination;
+import org.dreambot.api.methods.interactive.GameObjects;
+import org.dreambot.api.methods.interactive.NPCs;
+import org.dreambot.api.methods.interactive.Players;
 import org.dreambot.api.methods.map.Tile;
 import org.dreambot.api.methods.skills.Skill;
+import org.dreambot.api.methods.skills.SkillTracker;
+import org.dreambot.api.methods.skills.Skills;
+import org.dreambot.api.methods.walking.impl.Walking;
 import org.dreambot.api.script.AbstractScript;
 import org.dreambot.api.script.Category;
 import org.dreambot.api.script.ScriptManifest;
 import org.dreambot.api.wrappers.interactive.Entity;
 import org.dreambot.api.wrappers.items.Item;
+
+import java.awt.*;
 
 
 @ScriptManifest(author = "Nezz", description = "Thieves stuff", name = "DreamBot Thiever", version = 0, category = Category.THIEVING)
@@ -38,21 +43,21 @@ public class Thiever extends AbstractScript{
 		if(containsOneOf(sv.yourThieving.getDropItems())){
 			return State.DROP;
 		}
-		if(getInventory().isFull()){
+		if(Inventory.isFull()){
 			return State.BANK;
 		}
 		return State.STEAL;
 	}
 	
 	private int healthPerc(){
-		int currHealth = getSkills().getBoostedLevels(Skill.HITPOINTS);
-		int maxHealth = getSkills().getRealLevel(Skill.HITPOINTS);
+		int currHealth = Skills.getBoostedLevel(Skill.HITPOINTS);
+		int maxHealth = Skills.getRealLevel(Skill.HITPOINTS);
 		return ((currHealth*100)/maxHealth);
 	}
 	
 	private boolean containsOneOf(String...itemNames){
 		for(String name : itemNames){
-			if(name != null && getInventory().contains(name))
+			if(name != null && Inventory.contains(name))
 				return true;
 		}
 		return false;
@@ -65,8 +70,8 @@ public class Thiever extends AbstractScript{
 		while(!sv.started){
 			sleep(300);
 		}
-		getSkillTracker().start(Skill.THIEVING);
-		startTile = getPlayers().myPlayer().getTile();
+		SkillTracker.start(Skill.THIEVING);
+		startTile = Players.getLocal().getTile();
 		timer = new RunTimer();
 		started = true;
 		log("Starting silk thiever!");
@@ -79,11 +84,11 @@ public class Thiever extends AbstractScript{
 		switch(state){
 		case DROP:
 			for(int i = 0; i < 28; i++){
-				Item item = getInventory().getItemInSlot(i);
+				Item item = Inventory.getItemInSlot(i);
 				if(item != null){
 					for(String name : sv.yourThieving.getDropItems()){
 						if(name != null && name.equals(item.getName())){
-							getInventory().slotInteract(i, "Drop");
+							Inventory.slotInteract(i, "Drop");
 							sleep(200,400);
 							break;
 						}
@@ -91,27 +96,23 @@ public class Thiever extends AbstractScript{
 				}
 			}
 			if(stealFrom != null){
-				EntityDestination ed = new EntityDestination(getClient().getInstance(), stealFrom);
-				if(ed != null){
-					Point p = ed.getGaussPoint();
-					getMouse().move(p);
-				}
+				Mouse.move(stealFrom);
 			}
 			sleep(300,600);
 			break;
 		case STEAL:
 			log(sv.yourThieving.getName());
-			stealFrom = getNpcs().closest(sv.yourThieving.getName());
+			stealFrom = NPCs.closest(sv.yourThieving.getName());
 			if(stealFrom == null){
-				stealFrom = getGameObjects().closest(sv.yourThieving.getName());
+				stealFrom = GameObjects.closest(sv.yourThieving.getName());
 			}
-			if(stealFrom != null && getPlayers().myPlayer().getAnimation() == -1 && stealFrom.isOnScreen()){
+			if(stealFrom != null && Players.getLocal().getAnimation() == -1 && stealFrom.isOnScreen()){
 				log("Thieving!");
 				stealFrom.interact(sv.yourThieving.getAction());
 				sleep(300,500);
 			} else{
-				if(startTile.distance(getPlayers().myPlayer()) > 10){
-					getWalking().walk(startTile);
+				if(startTile.distance(Players.getLocal()) > 10){
+					Walking.walk(startTile);
 					sleep(300,600);
 				}
 				else{
@@ -121,27 +122,26 @@ public class Thiever extends AbstractScript{
 				
 			break;
 		case BANK:
-			Bank bank = getBank();
-			if(bank.isOpen()){
-				bank.depositAllItems();
+			if(Bank.isOpen()){
+				Bank.depositAllItems();
 				sleep(300,600);
 			}
 			else{
-				if(sv.yourBank.getCenter().distance(getPlayers().myPlayer()) > 10){
-					getWalking().walk(sv.yourBank.getCenter());
+				if(sv.yourBank.getCenter().distance(Players.getLocal()) > 10){
+					Walking.walk(sv.yourBank.getCenter());
 					sleep(300,600);
 				}
 				else{
-					bank.open(sv.yourBank);
+					Bank.open(sv.yourBank);
 					sleep(300,600);
 				}
 			}
 			break;
 		case HEAL:
 			for(int i = 0; i < 28; i++){
-				Item item = getInventory().getItemInSlot(i);
+				Item item = Inventory.getItemInSlot(i);
 				if(item != null && item.hasAction("Eat")){
-					getInventory().slotInteract(i, "Eat");
+					Inventory.slotInteract(i, "Eat");
 					sleep(600,900);
 					break;
 				}
@@ -158,8 +158,8 @@ public class Thiever extends AbstractScript{
 
 	public void onPaint(Graphics g) {
 		if(started){
-			g.drawString("Experience gained(p/h): " + getSkillTracker().getGainedExperience(Skill.THIEVING) +"(" + getSkillTracker().getGainedExperiencePerHour(Skill.THIEVING) + ")", 5, 90);
-			g.drawString("Level(gained): " + getSkills().getRealLevel(Skill.THIEVING) + "(" + getSkillTracker().getGainedLevels(Skill.THIEVING) + ")", 5, 105);
+			g.drawString("Experience gained(p/h): " + SkillTracker.getGainedExperience(Skill.THIEVING) +"(" + SkillTracker.getGainedExperiencePerHour(Skill.THIEVING) + ")", 5, 90);
+			g.drawString("Level(gained): " + Skills.getRealLevel(Skill.THIEVING) + "(" + SkillTracker.getGainedLevels(Skill.THIEVING) + ")", 5, 105);
 			g.drawString("Runtime: " + timer.format(), 5, 120);
 			if(state != null)
 				g.drawString("State: " + state.toString(), 5, 135);

@@ -1,37 +1,19 @@
 package nezz.dreambot.powerminer.gui;
 
-import javax.swing.JFrame;
-import javax.swing.JPanel;
-import javax.swing.border.EmptyBorder;
-
-import java.awt.Toolkit;
-import java.awt.SystemColor;
-
-import javax.swing.JLabel;
-import javax.swing.JTextField;
-import javax.swing.JButton;
-
-import java.awt.event.ActionListener;
-import java.awt.event.ActionEvent;
-import java.awt.Color;
-import java.util.ArrayList;
-import java.util.List;
-
-import javax.swing.JComboBox;
-import javax.swing.DefaultComboBoxModel;
-
 import nezz.dreambot.filemethods.FileMethods;
 import nezz.dreambot.scriptmain.powerminer.MineTask;
-
-import org.dreambot.api.methods.MethodContext;
+import org.dreambot.api.Client;
 import org.dreambot.api.methods.container.impl.bank.BankLocation;
+import org.dreambot.api.methods.interactive.Players;
 import org.dreambot.api.methods.map.Tile;
 
-import javax.swing.DefaultListModel;
-import javax.swing.JCheckBox;
-import javax.swing.JList;
-import javax.swing.JSeparator;
-import javax.swing.SwingConstants;
+import javax.swing.*;
+import javax.swing.border.EmptyBorder;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.util.ArrayList;
+import java.util.List;
 
 public class minerGui extends JFrame {
 
@@ -52,7 +34,7 @@ public class minerGui extends JFrame {
 	private DefaultListModel<String> model1 = new DefaultListModel<String>();
 	private JTextField txtFilename;
 
-	public minerGui(final ScriptVars var, final MethodContext ctx) {
+	public minerGui(final ScriptVars var) {
 		setTitle("Dreambot Power Miner");
 		setIconImage(Toolkit.getDefaultToolkit().getImage(minerGui.class.getResource("/javax/swing/plaf/metal/icons/ocean/computer.gif")));
 		setAlwaysOnTop(true);
@@ -145,7 +127,7 @@ public class minerGui extends JFrame {
 				int z = Integer.parseInt(tileVals[2]);
 				Tile startTile = new Tile(x,y,z);
 				boolean dontMove = chckbxDontMove.isSelected();
-				MineTask mt = new MineTask(ctx, oreName, ids, startTile, goal, powermine, bank, dontMove);
+				MineTask mt = new MineTask(oreName, ids, startTile, goal, powermine, bank, dontMove);
 				var.tasks.add(mt);
 				model1.addElement(mt.toString());
 				list.setModel(model1);
@@ -192,8 +174,8 @@ public class minerGui extends JFrame {
 		tileField = new JTextField();
 		Tile myTile = null;
 		String tile = "1234,1234,0";
-		if(ctx.getClient().isLoggedIn()){
-			myTile = ctx.getPlayers().myPlayer().getTile();
+		if(Client.isLoggedIn()){
+			myTile = Players.getLocal().getTile();
 		}
 		if(myTile != null)
 			tile = myTile.getX() + "," + myTile.getY() + "," + myTile.getZ();
@@ -225,7 +207,7 @@ public class minerGui extends JFrame {
 		JButton btnLoad = new JButton("Load");
 		btnLoad.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-				loadFile(var,ctx,txtFilename.getText());
+				loadFile(var,txtFilename.getText());
 			}
 		});
 		btnLoad.setBounds(173, 248, 57, 23);
@@ -267,7 +249,7 @@ public class minerGui extends JFrame {
 		//sb.add("END FILE");
 		fm.writeFile(sb, fileName);
 	}
-	public void loadFile(final ScriptVars var, final MethodContext ctx, String fileName){
+	public void loadFile(final ScriptVars var, String fileName){
 		var.tasks.clear();
 		model1.clear();
 		String[] content = fm.readFileArray(fileName);
@@ -309,7 +291,7 @@ public class minerGui extends JFrame {
 			if(dontMoveString.toLowerCase().equals("true"))
 				dontMove = true;
 			
-			MineTask mt = new MineTask(ctx, oreName, ids, startTile, goal, powermine, bank, dontMove);
+			MineTask mt = new MineTask(oreName, ids, startTile, goal, powermine, bank, dontMove);
 			System.out.println(mt.toString());
 			var.tasks.add(mt);
 			model1.addElement(mt.toString());

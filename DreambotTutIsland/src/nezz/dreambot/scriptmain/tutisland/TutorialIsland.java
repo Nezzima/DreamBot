@@ -1,35 +1,45 @@
 package nezz.dreambot.scriptmain.tutisland;
 
-import java.awt.Graphics;
-import java.awt.Rectangle;
-import java.io.IOException;
-import java.util.List;
-
 import nezz.dreambot.accountcreate.AccountCreate;
 import nezz.dreambot.filemethods.FileMethods;
 import nezz.dreambot.tutisland.gui.ScriptVars;
 import nezz.dreambot.tutisland.gui.tutIslandGui;
-
-import org.dreambot.api.data.GameState;
-import org.dreambot.api.input.event.impl.InteractionEvent;
-import org.dreambot.api.input.mouse.destination.impl.shape.RectangleDestination;
+import org.dreambot.api.Client;
+import org.dreambot.api.input.Mouse;
 import org.dreambot.api.methods.Calculations;
-import org.dreambot.api.methods.MethodProvider;
+import org.dreambot.api.methods.container.impl.Inventory;
+import org.dreambot.api.methods.container.impl.bank.Bank;
+import org.dreambot.api.methods.container.impl.equipment.Equipment;
+import org.dreambot.api.methods.container.impl.equipment.EquipmentSlot;
+import org.dreambot.api.methods.dialogues.Dialogues;
+import org.dreambot.api.methods.input.Camera;
+import org.dreambot.api.methods.interactive.GameObjects;
+import org.dreambot.api.methods.interactive.NPCs;
+import org.dreambot.api.methods.interactive.Players;
+import org.dreambot.api.methods.login.LoginUtility;
+import org.dreambot.api.methods.magic.Magic;
 import org.dreambot.api.methods.magic.Normal;
+import org.dreambot.api.methods.map.Map;
 import org.dreambot.api.methods.map.Tile;
+import org.dreambot.api.methods.settings.PlayerSettings;
 import org.dreambot.api.methods.tabs.Tab;
+import org.dreambot.api.methods.tabs.Tabs;
+import org.dreambot.api.methods.walking.impl.Walking;
 import org.dreambot.api.methods.widget.Widget;
+import org.dreambot.api.methods.widget.Widgets;
 import org.dreambot.api.script.AbstractScript;
 import org.dreambot.api.script.Category;
 import org.dreambot.api.script.ScriptManifest;
+import org.dreambot.api.utilities.Sleep;
 import org.dreambot.api.utilities.Timer;
-import org.dreambot.api.utilities.impl.Condition;
-import org.dreambot.api.methods.container.impl.equipment.EquipmentSlot;
-import org.dreambot.api.methods.filter.*;
 import org.dreambot.api.wrappers.interactive.GameObject;
 import org.dreambot.api.wrappers.interactive.NPC;
 import org.dreambot.api.wrappers.items.Item;
 import org.dreambot.api.wrappers.widgets.WidgetChild;
+
+import java.awt.*;
+import java.io.IOException;
+import java.util.List;
 
 @ScriptManifest(author = "Nezz", category = Category.MISC, description = "Does tutorial island", name = "DreamBot Tutorial Island", version = 1)
 public class TutorialIsland extends AbstractScript{
@@ -75,7 +85,7 @@ public class TutorialIsland extends AbstractScript{
 		if(!started){
 			return State.CREATE_ACC;
 		}
-		if(getPlayerSettings().getConfig(TAB_CONFIG) > 0){
+		if(PlayerSettings.getConfig(TAB_CONFIG) > 0){
 			return State.OPEN_TAB;
 		}
 		return State.DO_TUT;
@@ -89,7 +99,7 @@ public class TutorialIsland extends AbstractScript{
 		t = new Timer();
 	}
 	public void onStart(){
-		if(!getClient().isLoggedIn()){
+		if(!Client.isLoggedIn()){
 			tutIslandGui gui = new tutIslandGui(sv);
 			gui.setVisible(true);
 			while(!sv.started){
@@ -105,13 +115,13 @@ public class TutorialIsland extends AbstractScript{
 	
 	
     private WidgetChild getClickHereToContinue(){
-        if(!getDialogues().inDialogue()){
+        if(!Dialogues.inDialogue()){
         	log("Not in dialogue");
             return null;
         }
-        List<WidgetChild> children = getWidgets().getWidgetChildrenContainingText("Click here to continue");
+        List<WidgetChild> children = Widgets.getWidgetChildrenContainingText("Click here to continue");
         if(children.isEmpty()){
-            children = getWidgets().getWidgetChildrenContainingText("Click to continue");
+            children = Widgets.getWidgetChildrenContainingText("Click to continue");
         }
         if(children.isEmpty()){
             return null;
@@ -128,7 +138,7 @@ public class TutorialIsland extends AbstractScript{
                 }
             }
         }
-        children = getWidgets().getWidgetChildrenContainingText("Click to continue");
+        children = Widgets.getWidgetChildrenContainingText("Click to continue");
         for(WidgetChild wc : children){
             if(wc.isVisible()){
                 if(wc.getParentID() != 137){
@@ -178,7 +188,7 @@ public class TutorialIsland extends AbstractScript{
 				tempEmail = tempName+"@gmail.com";
 			sv.finalName = tempName;
 			log("Trying name: " + tempName + (sv.email != null ? " with email:" + tempEmail : ""));
-			AccountCreate ac = new AccountCreate(getClient().getInstance());
+			AccountCreate ac = new AccountCreate(Client.getInstance());
 			log(tempName+":"+tempEmail+":"+sv.pass+":"+sv.age);
 			try {
 				made = ac.makeAccount(tempName,tempEmail,sv.pass, sv.age);
@@ -190,7 +200,7 @@ public class TutorialIsland extends AbstractScript{
 				log("Success!");
 				accMade = true;
 				FileMethods fm = new FileMethods("tutIsland");
-				fm.appendFile(sv.getEmail() + ":" + sv.pass,"tutIslandAccs");
+//				fm.appendFile(sv.getEmail() + ":" + sv.pass,"tutIslandAccs");
 			}
 			else{
 				log("Creation failed!");
@@ -204,11 +214,7 @@ public class TutorialIsland extends AbstractScript{
 		else{
 			log("Login!");
 			login();
-			sleepUntil(new Condition(){
-				public boolean verify(){
-					return getWidgets().getWidget(APPEAR_PAR)!=null;
-				}
-			},30000);
+			Sleep.sleepUntil(() -> Widgets.getWidget(APPEAR_PAR)!=null,30000);
 		}
     	return Calculations.random(250,350);
     }
@@ -217,7 +223,7 @@ public class TutorialIsland extends AbstractScript{
 	public int onLoop() {
 		state = getState();
 		if(state != State.CREATE_ACC){
-			List<WidgetChild> clickToContinue = getWidgets().getWidgetChildrenContainingText("Click to continue");
+			List<WidgetChild> clickToContinue = Widgets.getWidgetChildrenContainingText("Click to continue");
 			if(!clickToContinue.isEmpty()){
 				WidgetChild wc = clickToContinue.get(0);
 				if(wc != null && wc.isVisible()){
@@ -228,7 +234,7 @@ public class TutorialIsland extends AbstractScript{
 		}
 		switch(state){
 		case CREATE_ACC:
-			if(!getClient().isLoggedIn()){
+			if(!Client.isLoggedIn()){
 				int res = makeAccount();
 				if(res == -1){
 					return res;
@@ -238,11 +244,11 @@ public class TutorialIsland extends AbstractScript{
 				accMade = true;
 				t = new Timer();
 				log("appearance");
-				final Widget par = getWidgets().getWidget(APPEAR_PAR);
+				final Widget par = Widgets.getWidget(APPEAR_PAR);
 				if(par != null && par.isVisible()){
 					for(int i =0; i < appChildren.length; i++){
-						if(getClient().seededRandom() >= 1){
-							if(getClient().seededRandom() > 1){
+						if(Client.seededRandom() >= 1){
+							if(Client.seededRandom() > 1){
 								for(int ii = 0; ii < 5; ii++){
 									par.getChild(appChildren[i][0]).interact();
 									sleep(100,150);
@@ -258,18 +264,16 @@ public class TutorialIsland extends AbstractScript{
 						}
 					}
 					par.getChild(ACCEPT).interact();
-					sleepUntil(new Condition(){
-						public boolean verify(){
-							WidgetChild wc = par.getChild(ACCEPT);
-							return wc == null || !wc.isVisible();
-						}
+					Sleep.sleepUntil(() -> {
+						WidgetChild wc = par.getChild(ACCEPT);
+						return wc == null || !wc.isVisible();
 					},1200);
 					started = true;
 				}
 			}
 			break;
 		case DO_TUT:
-			int conf = getPlayerSettings().getConfig(TUT_PROG);
+			int conf = PlayerSettings.getConfig(TUT_PROG);
 			switch(conf){
 			case 7:
 			case 0:
@@ -279,18 +283,14 @@ public class TutorialIsland extends AbstractScript{
 				//open settings
 				break;
 			case 10:
-				if(!getWalking().isRunEnabled()){
-					getWalking().toggleRun();
+				if(!Walking.isRunEnabled()){
+					Walking.toggleRun();
 				}
-				GameObject door = getGameObjects().closest("Door");
+				GameObject door = GameObjects.closest("Door");
 				if(door != null){
 					if(door.interact("Open")){
 						walkingSleep();
-						sleepUntil(new Condition(){
-							public boolean verify(){
-								return getPlayerSettings().getConfig(TUT_PROG) != 10;
-							}
-						},Calculations.random(1600,2000));
+						Sleep.sleepUntil(() -> PlayerSettings.getConfig(TUT_PROG) != 10,Calculations.random(1600,2000));
 					}
 				}
 				//open door
@@ -301,38 +301,26 @@ public class TutorialIsland extends AbstractScript{
 				//talked to survival expert
 				break;
 			case 30:
-				getDialogues().clickContinue();
+				Dialogues.clickContinue();
 				//opened invnetory
 				break;
 			case 40:
-				GameObject tree = getGameObjects().closest("Tree");
+				GameObject tree = GameObjects.closest("Tree");
 				if(tree != null){
-					if(getLocalPlayer().getAnimation() != -1){
-						sleepUntil(new Condition(){
-							public boolean verify(){
-								return getInventory().contains("Logs");
-							}
-						},Calculations.random(1000,2000));
+					if(Players.getLocal().getAnimation() != -1){
+						Sleep.sleepUntil(() -> Inventory.contains("Logs"),Calculations.random(1000,2000));
 						break;
 					}
 					if(tree.interact("Chop down")){
 						walkingSleep();
-						sleepUntil(new Condition(){
-							public boolean verify(){
-								return getInventory().contains("Logs");
-							}
-						},Calculations.random(1000,2000));
+						Sleep.sleepUntil(() -> Inventory.contains("Logs"),Calculations.random(1000,2000));
 					}
 				}
 				//chopped logs
 				break;
 			case 50:
-				if(!getInventory().contains("Logs")){
-					sleepUntil(new Condition(){
-						public boolean verify(){
-							return getPlayerSettings().getConfig(TUT_PROG) != 50;
-						}
-					},5000);
+				if(!Inventory.contains("Logs")){
+					Sleep.sleepUntil(() -> PlayerSettings.getConfig(TUT_PROG) != 50,5000);
 					break;
 				}
 				lightFire();
@@ -342,23 +330,15 @@ public class TutorialIsland extends AbstractScript{
 				//opened skills
 				break;
 			case 80:
-				if(getLocalPlayer().getAnimation() != -1){
-					sleepUntil(new Condition(){
-						public boolean verify(){
-							return getPlayerSettings().getConfig(TUT_PROG) != 80;
-						}
-					},5000);
+				if(Players.getLocal().getAnimation() != -1){
+					Sleep.sleepUntil(() -> PlayerSettings.getConfig(TUT_PROG) != 80,5000);
 					break;
 				}
-				NPC pool = getNpcs().closest("Fishing spot");
+				NPC pool = NPCs.closest("Fishing spot");
 				if(pool != null){
 					if(pool.interact("Net")){
 						walkingSleep();
-						sleepUntil(new Condition(){
-							public boolean verify(){
-								return getPlayerSettings().getConfig(TUT_PROG) != 80;
-							}
-						},Calculations.random(4000,5000));
+						Sleep.sleepUntil(() -> PlayerSettings.getConfig(TUT_PROG) != 80,Calculations.random(4000,5000));
 					}
 				}
 				//caught shrimp
@@ -367,31 +347,23 @@ public class TutorialIsland extends AbstractScript{
 				cookShrimp();
 				break;
 			case 100:
-				if(getDialogues().canContinue()){
-					getDialogues().clickContinue();
+				if(Dialogues.canContinue()){
+					Dialogues.clickContinue();
 					break;
 				}
 				cookShrimp();
 				//burned shrimp
 				break;
 			case 110:
-				if(!getInventory().contains("Raw shrimps")){
-					if(getLocalPlayer().getAnimation() != -1){
-						sleepUntil(new Condition(){
-							public boolean verify(){
-								return getInventory().contains("Raw shrimps");
-							}
-						},5000);
+				if(!Inventory.contains("Raw shrimps")){
+					if(Players.getLocal().getAnimation() != -1){
+						Sleep.sleepUntil(() -> Inventory.contains("Raw shrimps"),5000);
 					}
 					else{
-						pool = getNpcs().closest("Fishing spot");
+						pool = NPCs.closest("Fishing spot");
 						if(pool != null){
 							pool.interact("Net");
-							sleepUntil(new Condition(){
-								public boolean verify(){
-									return getInventory().contains("Raw shrimps");
-								}
-							},5000);
+							Sleep.sleepUntil(() -> Inventory.contains("Raw shrimps"),5000);
 						}
 					}
 				}
@@ -401,41 +373,33 @@ public class TutorialIsland extends AbstractScript{
 				//cooked second shrimp
 				break;
 			case 120:
-				if(getLocalPlayer().getTile().distance(new Tile(3091,3092,0)) > 5){
+				if(Players.getLocal().getTile().distance(new Tile(3091,3092,0)) > 5){
 					
-					getWalking().walk(new Tile(3090,3092,0));
+					Walking.walk(new Tile(3090,3092,0));
 					walkingSleep();
 				}
 				else{
-					GameObject gate = getGameObjects().closest("Gate");
+					GameObject gate = GameObjects.closest("Gate");
 					if(gate != null){
 						if(gate.interact("Open")){
 							walkingSleep();
-							sleepUntil(new Condition(){
-								public boolean verify(){
-									return getPlayerSettings().getConfig(TUT_PROG) != 120;
-								}
-							},Calculations.random(1400,1800));
+							Sleep.sleepUntil(() -> PlayerSettings.getConfig(TUT_PROG) != 120,Calculations.random(1400,1800));
 						}
 					}
 				}
 				//went through gate
 				break;
 			case 130:
-				if(getLocalPlayer().getTile().distance(new Tile(3080,3084,0)) > 5){
-					getWalking().walk(new Tile(3080,3084,0));
+				if(Players.getLocal().getTile().distance(new Tile(3080,3084,0)) > 5){
+					Walking.walk(new Tile(3080,3084,0));
 					walkingSleep();
 				}
 				else{
-					GameObject gate = getGameObjects().closest("Door");
+					GameObject gate = GameObjects.closest("Door");
 					if(gate != null){
 						if(gate.interact("Open")){
 							walkingSleep();
-							sleepUntil(new Condition(){
-								public boolean verify(){
-									return getPlayerSettings().getConfig(TUT_PROG) != 130;
-								}
-							},1200);
+							Sleep.sleepUntil(() -> PlayerSettings.getConfig(TUT_PROG) != 130,1200);
 						}
 					}
 				}
@@ -446,45 +410,29 @@ public class TutorialIsland extends AbstractScript{
 				//talked to cook
 				break;
 			case 150:
-				if(!getInventory().isItemSelected()){
-					if(getInventory().interact("Bucket of water", "Use")){
-						sleepUntil(new Condition(){
-							public boolean verify(){
-								return getInventory().isItemSelected();
-							}
-						}, Calculations.random(1200,1400));
+				if(!Inventory.isItemSelected()){
+					if(Inventory.interact("Bucket of water", "Use")){
+						Sleep.sleepUntil(() -> Inventory.isItemSelected(), Calculations.random(1200,1400));
 					}
 				}
 				else{
-					if(getInventory().interact("Pot of flour", "Use")){
-						sleepUntil(new Condition(){
-							public boolean verify(){
-								return getInventory().contains("Bread dough");
-							}
-						},Calculations.random(1200,1400));
+					if(Inventory.interact("Pot of flour", "Use")){
+						Sleep.sleepUntil(() -> Inventory.contains("Bread dough"),Calculations.random(1200,1400));
 					}
 				}
 				//made dough
 				break;
 			case 160:
-				if(!getInventory().isItemSelected()){
-					if(getInventory().interact("Bread dough", "Use")){
-						sleepUntil(new Condition(){
-							public boolean verify(){
-								return getInventory().isItemSelected();
-							}
-						},Calculations.random(1200,1400));
+				if(!Inventory.isItemSelected()){
+					if(Inventory.interact("Bread dough", "Use")){
+						Sleep.sleepUntil(() -> Inventory.isItemSelected(),Calculations.random(1200,1400));
 					}
 				}
 				else{
-					GameObject range = getGameObjects().closest("Range");
+					GameObject range = GameObjects.closest("Range");
 					if(range.interact("Use")){
 						walkingSleep();
-						sleepUntil(new Condition(){
-							public boolean verify(){
-								return getInventory().contains("Bread");
-							}
-						},Calculations.random(2000,3000));
+						Sleep.sleepUntil(() -> Inventory.contains("Bread"),Calculations.random(2000,3000));
 					}
 				}
 				//cooked bread
@@ -493,20 +441,16 @@ public class TutorialIsland extends AbstractScript{
 				//opened music
 				break;
 			case 180:
-				if(getLocalPlayer().getTile().distance(new Tile(3073,3090,0)) > 5){
-					getWalking().walk(new Tile(3073,3090,0));
+				if(Players.getLocal().getTile().distance(new Tile(3073,3090,0)) > 5){
+					Walking.walk(new Tile(3073,3090,0));
 					walkingSleep();
 				}
 				else{
-					GameObject gate = getGameObjects().closest("Door");
+					GameObject gate = GameObjects.closest("Door");
 					if(gate != null){
 						if(gate.interact("Open")){
 							walkingSleep();
-							sleepUntil(new Condition(){
-								public boolean verify(){
-									return getPlayerSettings().getConfig(TUT_PROG) != 180;
-								}
-							},Calculations.random(1200,1600));
+							Sleep.sleepUntil(() -> PlayerSettings.getConfig(TUT_PROG) != 180,Calculations.random(1200,1600));
 						}
 					}
 				}
@@ -517,13 +461,9 @@ public class TutorialIsland extends AbstractScript{
 				break;
 			case 187:
 				Rectangle r = new Rectangle(560,213,20,40);
-				getMouse().move(r);
-				getMouse().click();
-				sleepUntil(new Condition(){
-					public boolean verify(){
-						return getPlayerSettings().getConfig(TUT_PROG) != 187;
-					}
-				},5000);
+				Mouse.move(r);
+				Mouse.click();
+				Sleep.sleepUntil(() -> PlayerSettings.getConfig(TUT_PROG) != 187,5000);
 				//use emote
 				break;
 			case 190:
@@ -531,42 +471,28 @@ public class TutorialIsland extends AbstractScript{
 				break;
 			case 200:
 				//261,65
-				WidgetChild wc = getWidgets().getChildWidget(261,63);
+				WidgetChild wc = Widgets.getChildWidget(261,63);
 				if(wc != null && wc.isVisible()){
 					wc.interact();
-					sleepUntil(new Condition(){
-						public boolean verify(){
-							return getWalking().isRunEnabled();
-						}
-					},1200);
+					Sleep.sleepUntil(() -> Walking.isRunEnabled(),1200);
 				}
 				//turned on run in settings
 				break;
 			case 210:
-				if(getLocalPlayer().getTile().distance(new Tile(3086,3126,0)) > 5){
-					getWalking().walk(cookToQuest[cookToQuest.length - 1]);//, Calculations.random(10,15));
-					sleepUntil(new Condition(){
-						public boolean verify(){
-							return getLocalPlayer().isMoving();
-						}
-					},1200);
-					sleepUntil(new Condition(){
-						public boolean verify(){
-							Tile dest = getClient().getDestination();
-							return !getLocalPlayer().isMoving() || dest == null || getLocalPlayer().distance(dest) < 5;
-						}
+				if(Players.getLocal().getTile().distance(new Tile(3086,3126,0)) > 5){
+					Walking.walk(cookToQuest[cookToQuest.length - 1]);//, Calculations.random(10,15));
+					Sleep.sleepUntil(() -> Players.getLocal().isMoving(),1200);
+					Sleep.sleepUntil(() -> {
+						Tile dest = Client.getDestination();
+						return !Players.getLocal().isMoving() || dest == null || Players.getLocal().distance(dest) < 5;
 					},Calculations.random(2600,3000));
 				}
 				else{
-					GameObject gate = getGameObjects().closest("Door");
+					GameObject gate = GameObjects.closest("Door");
 					if(gate != null){
 						if(gate.interact("Open")){
 							walkingSleep();
-							sleepUntil(new Condition(){
-								public boolean verify(){
-									return getPlayerSettings().getConfig(TUT_PROG) != 210;
-								}
-							},Calculations.random(1200,1400));
+							Sleep.sleepUntil(() -> PlayerSettings.getConfig(TUT_PROG) != 210,Calculations.random(1200,1400));
 						}
 					}
 				}
@@ -581,15 +507,11 @@ public class TutorialIsland extends AbstractScript{
 				//open quest tab
 				break;
 			case 250:
-				GameObject gate = getGameObjects().closest("Ladder");
+				GameObject gate = GameObjects.closest("Ladder");
 				if(gate != null){
 					if(gate.interact("Climb-down")){
 						walkingSleep();
-						sleepUntil(new Condition(){
-							public boolean verify(){
-								return getPlayerSettings().getConfig(TUT_PROG) != 250;
-							}
-						},Calculations.random(4000,6000));
+						Sleep.sleepUntil(() -> PlayerSettings.getConfig(TUT_PROG) != 250,Calculations.random(4000,6000));
 					}
 				}
 				//climb down ladder
@@ -601,126 +523,94 @@ public class TutorialIsland extends AbstractScript{
 				//talk to mining instructor
 				break;
 			case 270:
-				GameObject tin = getGameObjects().closest(new Filter<GameObject>(){
-					public boolean match(GameObject g){
-						if(g == null || g.getName() == null)
-							return false;
-						if(!g.getName().equals("Rocks"))
-							return false;
-						if(g.getTile().equals(new Tile(3077,9504,0)))
-							return true;
+				GameObject tin = GameObjects.closest(g -> {
+					if(g == null || g.getName() == null)
 						return false;
-					}
+					if(!g.getName().equals("Rocks"))
+						return false;
+					if(g.getTile().equals(new Tile(3077,9504,0)))
+						return true;
+					return false;
 				});
 				if(tin != null){
 					if(tin.interact("Prospect")){
 						walkingSleep();
-						sleepUntil(new Condition(){
-							public boolean verify(){
-								return getPlayerSettings().getConfig(TUT_PROG)!=270;
-							}
-						},Calculations.random(3000,4000));
+						Sleep.sleepUntil(() -> PlayerSettings.getConfig(TUT_PROG)!=270,Calculations.random(3000,4000));
 					}
 				}
 				//inspect tin
 				break;
 			case 280:
-				tin = getGameObjects().closest(new Filter<GameObject>(){
-					public boolean match(GameObject g){
-						if(g == null || g.getName() == null)
-							return false;
-						if(!g.getName().equals("Rocks"))
-							return false;
-						if(g.getTile().equals(new Tile(3083,9501,0)))
-							return true;
+				tin = GameObjects.closest(g -> {
+					if(g == null || g.getName() == null)
 						return false;
-					}
+					if(!g.getName().equals("Rocks"))
+						return false;
+					if(g.getTile().equals(new Tile(3083,9501,0)))
+						return true;
+					return false;
 				});
 				if(tin != null){
 					if(tin.interact("Prospect")){
-						sleepUntil(new Condition(){
-							public boolean verify(){
-								return getPlayerSettings().getConfig(TUT_PROG)!=280;
-							}
-						},Calculations.random(4000,5000));
+						Sleep.sleepUntil(() -> PlayerSettings.getConfig(TUT_PROG)!=280,Calculations.random(4000,5000));
 					}
 				}
 				//inspect copper
 				break;
 			case 300:
-				tin = getGameObjects().closest(new Filter<GameObject>(){
-					public boolean match(GameObject g){
-						if(g == null || g.getName() == null)
-							return false;
-						if(!g.getName().equals("Rocks"))
-							return false;
-						if(g.getTile().equals(new Tile(3077,9504,0)))
-							return true;
+				tin = GameObjects.closest(g -> {
+					if(g == null || g.getName() == null)
 						return false;
-					}
+					if(!g.getName().equals("Rocks"))
+						return false;
+					if(g.getTile().equals(new Tile(3077,9504,0)))
+						return true;
+					return false;
 				});
 				if(tin != null){
 					if(tin.interact("Mine")){
 						walkingSleep();
-						sleepUntil(new Condition(){
-							public boolean verify(){
-								return getPlayerSettings().getConfig(TUT_PROG)!=300;
-							}
-						},Calculations.random(2000,3000));
+						Sleep.sleepUntil(() -> PlayerSettings.getConfig(TUT_PROG)!=300,Calculations.random(2000,3000));
 					}
 				}
 				//mine tin
 				break;
 			case 310:
-				tin = getGameObjects().closest(new Filter<GameObject>(){
-					public boolean match(GameObject g){
-						if(g == null || g.getName() == null)
-							return false;
-						if(!g.getName().equals("Rocks"))
-							return false;
-						if(g.getTile().equals(new Tile(3083,9501,0)))
-							return true;
+				tin = GameObjects.closest(g -> {
+					if(g == null || g.getName() == null)
 						return false;
-					}
+					if(!g.getName().equals("Rocks"))
+						return false;
+					if(g.getTile().equals(new Tile(3083,9501,0)))
+						return true;
+					return false;
 				});
 				if(tin != null){
 					if(tin.interact("Mine")){
 						walkingSleep();
-						sleepUntil(new Condition(){
-							public boolean verify(){
-								return getPlayerSettings().getConfig(TUT_PROG)!=310;
-							}
-						},Calculations.random(2000,3000));
+						Sleep.sleepUntil(() -> PlayerSettings.getConfig(TUT_PROG)!=310,Calculations.random(2000,3000));
 					}
 				}
 				//mine copper
 				break;
 			case 320:
-				if(getDialogues().canContinue()){
-					getDialogues().clickContinue();
+				if(Dialogues.canContinue()){
+					Dialogues.clickContinue();
 					sleep(900,1200);
 				}
 				else{
-					if(!getInventory().isItemSelected()){
+					if(!Inventory.isItemSelected()){
 						sleep(1200,1800);
-						getInventory().interact("Tin ore", "Use");
-						sleepUntil(new Condition(){
-							public boolean verify(){
-								return getInventory().isItemSelected();
-							}
-						},Calculations.random(800,1200));
+						Inventory.interact("Tin ore", "Use");
+						Sleep.sleepUntil(() -> Inventory.isItemSelected(),Calculations.random(800,1200));
 					}
 					else{
-						GameObject furnace = getGameObjects().closest(10082);
+						GameObject furnace = GameObjects.closest(10082);
 						
 						if(furnace != null){
 							if(furnace.interact("Use")){
 								walkingSleep();
-								sleepUntil(new Condition(){
-									public boolean verify(){
-										return getInventory().contains("Bronze bar");
-									}
-								},Calculations.random(2000,3000));
+								Sleep.sleepUntil(() -> Inventory.contains("Bronze bar"),Calculations.random(2000,3000));
 							}
 						}
 					}
@@ -728,53 +618,37 @@ public class TutorialIsland extends AbstractScript{
 				//smelt bronze
 				break;
 			case 340:
-				if(!getInventory().isItemSelected()){
-					getInventory().interact("Bronze bar", "Use");
-					sleepUntil(new Condition(){
-						public boolean verify(){
-							return getInventory().isItemSelected();
-						}
-					},1200);
+				if(!Inventory.isItemSelected()){
+					Inventory.interact("Bronze bar", "Use");
+					Sleep.sleepUntil(() -> Inventory.isItemSelected(),1200);
 				}
 				else{
-					GameObject furnace = getGameObjects().closest("Anvil");
+					GameObject furnace = GameObjects.closest("Anvil");
 					if(furnace != null){
 						if(furnace.interact("Use")){
 							walkingSleep();
-							sleepUntil(new Condition(){
-								public boolean verify(){
-									return getPlayerSettings().getConfig(TUT_PROG) != 340;
-								}
-							},Calculations.random(2000,3000));
+							Sleep.sleepUntil(() -> PlayerSettings.getConfig(TUT_PROG) != 340,Calculations.random(2000,3000));
 						}
 					}
 				}
 				//open anvil panel
 				break;
 			case 350:
-				getWidgets().getChildWidget(312,2).interact();
-				sleepUntil(new Condition(){
-					public boolean verify(){
-						return getPlayerSettings().getConfig(TUT_PROG) != 350;
-					}
-				},3000);
+				Widgets.getChildWidget(312,2).interact();
+				Sleep.sleepUntil(() -> PlayerSettings.getConfig(TUT_PROG) != 350,3000);
 				//smith knife
 				break;
 			case 360:
-				if(getLocalPlayer().getTile().distance(new Tile(3094,9502,0)) > 5){
-					getWalking().walk(new Tile(3094,9502,0));
+				if(Players.getLocal().getTile().distance(new Tile(3094,9502,0)) > 5){
+					Walking.walk(new Tile(3094,9502,0));
 					walkingSleep();
 				}
 				else{
-					gate = getGameObjects().closest("Gate");
+					gate = GameObjects.closest("Gate");
 					if(gate != null){
 						if(gate.interact("Open")){
 							walkingSleep();
-							sleepUntil(new Condition(){
-								public boolean verify(){
-									return getPlayerSettings().getConfig(TUT_PROG) !=360;
-								}
-							},Calculations.random(1200,1800));
+							Sleep.sleepUntil(() -> PlayerSettings.getConfig(TUT_PROG) !=360,Calculations.random(1200,1800));
 						}
 					}
 				}
@@ -789,53 +663,33 @@ public class TutorialIsland extends AbstractScript{
 				//open equipment
 				break;
 			case 400:
-				getWidgets().getChildWidget(387,17).interact();
-				sleepUntil(new Condition(){
-					public boolean verify(){
-						return getPlayerSettings().getConfig(TUT_PROG) != 400;
-					}
-				},Calculations.random(1200,1600));
+				Widgets.getChildWidget(387,17).interact();
+				Sleep.sleepUntil(() -> PlayerSettings.getConfig(TUT_PROG) != 400,Calculations.random(1200,1600));
 				//open equipment stats
 				break;
 			case 405:
-				if(getInventory().interact("Bronze dagger", "Equip")){
-					sleepUntil(new Condition(){
-						public boolean verify(){
-							return getPlayerSettings().getConfig(TUT_PROG) != 410;
-						}
-					},Calculations.random(1200,1600));
+				if(Inventory.interact("Bronze dagger", "Equip")){
+					Sleep.sleepUntil(() -> PlayerSettings.getConfig(TUT_PROG) != 410,Calculations.random(1200,1600));
 				}
-				else if(getInventory().interact("Bronze dagger", "Wield")){
-					sleepUntil(new Condition(){
-						public boolean verify(){
-							return getPlayerSettings().getConfig(TUT_PROG) != 410;
-						}
-					},Calculations.random(1200,1600));
+				else if(Inventory.interact("Bronze dagger", "Wield")){
+					Sleep.sleepUntil(() -> PlayerSettings.getConfig(TUT_PROG) != 410,Calculations.random(1200,1600));
 				}
-				getWidgets().getChildWidget(84,4).interact();
+				Widgets.getChildWidget(84,4).interact();
 				//equip dagger
 				break;
 			case 420:
-				Item i = getEquipment().getItemInSlot(EquipmentSlot.WEAPON.getSlot());
+				Item i = Equipment.getItemInSlot(EquipmentSlot.WEAPON.getSlot());
 				if(i != null && i.getName().contains("dagger")){
-					getEquipment().unequip(EquipmentSlot.WEAPON);
+					Equipment.unequip(EquipmentSlot.WEAPON);
 				}
 				else{
 					if(i != null){
-						getInventory().interact("Wooden shield", "Wield");
-						sleepUntil(new Condition(){
-							public boolean verify(){
-								return getEquipment().getItemInSlot(EquipmentSlot.SHIELD.getSlot()) != null;
-							}
-						},Calculations.random(1200,1600));
+						Inventory.interact("Wooden shield", "Wield");
+						Sleep.sleepUntil(() -> Equipment.getItemInSlot(EquipmentSlot.SHIELD.getSlot()) != null,Calculations.random(1200,1600));
 					}
 					else{
-						getInventory().interact("Bronze sword", "Wield");
-						sleepUntil(new Condition(){
-							public boolean verify(){
-								return getEquipment().getItemInSlot(EquipmentSlot.WEAPON.getSlot()) != null;
-							}
-						},Calculations.random(1200,1600));
+						Inventory.interact("Bronze sword", "Wield");
+						Sleep.sleepUntil(() -> Equipment.getItemInSlot(EquipmentSlot.WEAPON.getSlot()) != null,Calculations.random(1200,1600));
 					}
 				}
 				//unequip knife
@@ -845,69 +699,51 @@ public class TutorialIsland extends AbstractScript{
 				//open combat tab
 				break;
 			case 440:
-				if(getLocalPlayer().getTile().distance(new Tile(3111,9518,0)) > 5){
-					getWalking().walk(new Tile(3111,9518,0));
+				if(Players.getLocal().getTile().distance(new Tile(3111,9518,0)) > 5){
+					Walking.walk(new Tile(3111,9518,0));
 					walkingSleep();
 				}
 				else{
-					gate = getGameObjects().closest("Gate");
+					gate = GameObjects.closest("Gate");
 					if(gate != null){
 						if(gate.interact("Open")){
 							walkingSleep();
-							sleepUntil(new Condition(){
-								public boolean verify(){
-									return getPlayerSettings().getConfig(TUT_PROG) !=360;
-								}
-							},Calculations.random(1200,1600));
+							Sleep.sleepUntil(() -> PlayerSettings.getConfig(TUT_PROG) !=360,Calculations.random(1200,1600));
 						}
 					}
 				}
 				//open rat gate
 				break;
 			case 450:
-				NPC rat = getNpcs().closest(new Filter<NPC>(){
-					public boolean match(NPC n){
-						if(n == null || n.getName() == null)
-							return false;
-						return n.getName().equals("Giant rat") && !n.isInCombat();
-					}
+				NPC rat = NPCs.closest(n -> {
+					if(n == null || n.getName() == null)
+						return false;
+					return n.getName().equals("Giant rat") && !n.isInCombat();
 				});
 				if(rat != null){
 					if(rat.interact("Attack")){
 						walkingSleep();
-						sleepUntil(new Condition(){
-							public boolean verify(){
-								return getPlayerSettings().getConfig(TUT_PROG) != 450;
-							}
-						},Calculations.random(1200,2000));
+						Sleep.sleepUntil(() -> PlayerSettings.getConfig(TUT_PROG) != 450,Calculations.random(1200,2000));
 					}
 					else{
-						if(getCamera().getPitch() < Calculations.random(150,200)){
-							getCamera().rotateToPitch(Calculations.random(200,360));
+						if(Camera.getPitch() < Calculations.random(150,200)){
+							Camera.rotateToPitch(Calculations.random(200,360));
 						}
 					}
 				}
 				//attack rat
 				break;
 			case 460:
-				sleepUntil(new Condition(){
-					public boolean verify(){
-						return getPlayerSettings().getConfig(TUT_PROG) != 460;
-					}
-				},2400);
+				Sleep.sleepUntil(() -> PlayerSettings.getConfig(TUT_PROG) != 460,2400);
 				//killed rat
 				break;
 			case 470:
-				if(!getMap().canReach(new Tile(3112,9518,0))){
-					gate = getGameObjects().closest("Gate");
+				if(!Map.canReach(new Tile(3112,9518,0))){
+					gate = GameObjects.closest("Gate");
 					if(gate != null){
 						if(gate.interact("Open")){
 							walkingSleep();
-							sleepUntil(new Condition(){
-								public boolean verify(){
-									return getLocalPlayer().getTile().getX() == 3111;
-								}
-							},Calculations.random(1200,1400));
+							Sleep.sleepUntil(() -> Players.getLocal().getTile().getX() == 3111,Calculations.random(1200,1400));
 						}
 					}
 				}
@@ -916,37 +752,23 @@ public class TutorialIsland extends AbstractScript{
 				//talk to combat instructor
 				break;
 			case 480:
-				if(getEquipment().isSlotEmpty(EquipmentSlot.ARROWS.getSlot())){
-					getInventory().interact("Bronze arrow", "Wield");
-					sleepUntil(new Condition(){
-						public boolean verify(){
-							return getEquipment().isSlotFull(EquipmentSlot.ARROWS.getSlot());
-						}
-					},Calculations.random(1200,1600));
+				if(Equipment.isSlotEmpty(EquipmentSlot.ARROWS.getSlot())){
+					Inventory.interact("Bronze arrow", "Wield");
+					Sleep.sleepUntil(() -> Equipment.isSlotFull(EquipmentSlot.ARROWS.getSlot()),Calculations.random(1200,1600));
 				}
-				else if(getInventory().contains("Shortbow")){
-					getInventory().interact("Shortbow", "Wield");
-					sleepUntil(new Condition(){
-						public boolean verify(){
-							return !getInventory().contains("Shortbow");
-						}
-					},Calculations.random(1200,1600));
+				else if(Inventory.contains("Shortbow")){
+					Inventory.interact("Shortbow", "Wield");
+					Sleep.sleepUntil(() -> !Inventory.contains("Shortbow"),Calculations.random(1200,1600));
 				}
 				else{
-					rat = getNpcs().closest(new Filter<NPC>(){
-						public boolean match(NPC n){
-							if(n == null || n.getName() == null)
-								return false;
-							return n.getName().equals("Giant rat") && !n.isInCombat();
-						}
+					rat = NPCs.closest(n -> {
+						if(n == null || n.getName() == null)
+							return false;
+						return n.getName().equals("Giant rat") && !n.isInCombat();
 					});
 					if(rat != null){
 						if(rat.interact("Attack")){
-							sleepUntil(new Condition(){
-								public boolean verify(){
-									return getPlayerSettings().getConfig(TUT_PROG) != 480;
-								}
-							},Calculations.random(2400, 3600));
+							Sleep.sleepUntil(() -> PlayerSettings.getConfig(TUT_PROG) != 480,Calculations.random(2400, 3600));
 						}
 					}
 				}
@@ -954,67 +776,45 @@ public class TutorialIsland extends AbstractScript{
 				//attack rat
 				break;
 			case 490:
-				if(getEquipment().isSlotEmpty(EquipmentSlot.ARROWS.getSlot())){
-					getInventory().interact("Bronze arrow", "Wield");
-					sleepUntil(new Condition(){
-						public boolean verify(){
-							return getEquipment().isSlotFull(EquipmentSlot.ARROWS.getSlot());
-						}
-					},1200);
+				if(Equipment.isSlotEmpty(EquipmentSlot.ARROWS.getSlot())){
+					Inventory.interact("Bronze arrow", "Wield");
+					Sleep.sleepUntil(() -> Equipment.isSlotFull(EquipmentSlot.ARROWS.getSlot()),1200);
 				}
-				else if(getInventory().contains("Shortbow")){
-					getInventory().interact("Shortbow", "Wield");
-					sleepUntil(new Condition(){
-						public boolean verify(){
-							return !getInventory().contains("Shortbow");
-						}
-					},1200);
+				else if(Inventory.contains("Shortbow")){
+					Inventory.interact("Shortbow", "Wield");
+					Sleep.sleepUntil(() -> !Inventory.contains("Shortbow"),1200);
 				}
 				else{
-					if(getLocalPlayer().getInteractingCharacter() == null){
-						rat = getNpcs().closest(new Filter<NPC>(){
-							public boolean match(NPC n){
-								if(n == null || n.getName() == null)
-									return false;
-								return n.getName().equals("Giant rat") && !n.isInCombat();
-							}
+					if(Players.getLocal().getInteractingCharacter() == null){
+						rat = NPCs.closest(n -> {
+							if(n == null || n.getName() == null)
+								return false;
+							return n.getName().equals("Giant rat") && !n.isInCombat();
 						});
 						if(rat != null){
 							if(rat.interact("Attack")){
-								sleepUntil(new Condition(){
-									public boolean verify(){
-										return getPlayerSettings().getConfig(TUT_PROG) != 480;
-									}
-								},Calculations.random(2400, 3600));
+								Sleep.sleepUntil(() -> PlayerSettings.getConfig(TUT_PROG) != 480,Calculations.random(2400, 3600));
 							}
 						}
 					}
 					else{
-						sleepUntil(new Condition(){
-							public boolean verify(){
-								return getPlayerSettings().getConfig(TUT_PROG) != 490;
-							}
-						},Calculations.random(2400,3000));
+						Sleep.sleepUntil(() -> PlayerSettings.getConfig(TUT_PROG) != 490,Calculations.random(2400,3000));
 					}
 				}
 				
 				//killed rat
 				break;
 			case 500:
-				if(getLocalPlayer().getTile().distance(new Tile(3112,9525,0)) > 5){
-					getWalking().walk(combatToLadder[combatToLadder.length-1]);//, Calculations.random(10,15));
+				if(Players.getLocal().getTile().distance(new Tile(3112,9525,0)) > 5){
+					Walking.walk(combatToLadder[combatToLadder.length-1]);//, Calculations.random(10,15));
 					walkingSleep();
 				}
 				else{
-					gate = getGameObjects().closest("Ladder");
+					gate = GameObjects.closest("Ladder");
 					if(gate != null){
 						if(gate.interact("Climb-up")){
 							walkingSleep();
-							sleepUntil(new Condition(){
-								public boolean verify(){
-									return getPlayerSettings().getConfig(TUT_PROG) != 500;
-								}
-							},Calculations.random(2400,3600));
+							Sleep.sleepUntil(() -> PlayerSettings.getConfig(TUT_PROG) != 500,Calculations.random(2400,3600));
 						}
 					}
 				}
@@ -1022,60 +822,36 @@ public class TutorialIsland extends AbstractScript{
 				break;
 			case 510:
 				Tile t = new Tile(3122,3123,0);
-				if(getLocalPlayer().distance(t) > 5){
-					getWalking().walk(t);
+				if(Players.getLocal().distance(t) > 5){
+					Walking.walk(t);
 					walkingSleep();
 				}
 				else{
-					if(getDialogues().getOptionIndex("Yes.") > 0){
-						getDialogues().clickOption("Yes.");
-						sleepUntil(new Condition(){
-							public boolean verify(){
-								return getBank().isOpen();
-							}
-						},Calculations.random(1200,1600));
+					if(Dialogues.getOptionIndex("Yes.") > 0){
+						Dialogues.clickOption("Yes.");
+						Sleep.sleepUntil(() -> Bank.isOpen(),Calculations.random(1200,1600));
 						
-						getBank().depositAllItems();
-						sleepUntil(new Condition(){
-							public boolean verify(){
-								return getInventory().isEmpty();
-							}
-						},Calculations.random(800,1200));
+						Bank.depositAllItems();
+						Sleep.sleepUntil(() -> Inventory.isEmpty(),Calculations.random(800,1200));
 						
-						getBank().depositAllEquipment();
-						sleepUntil(new Condition(){
-							public boolean verify(){
-								return getEquipment().isEmpty();
-							}
-						},Calculations.random(800,1200));
+						Bank.depositAllEquipment();
+						Sleep.sleepUntil(() -> Equipment.isEmpty(),Calculations.random(800,1200));
 						
-						getBank().close();
-						sleepUntil(new Condition(){
-							public boolean verify(){
-								return !getBank().isOpen();
-							}
-						}, Calculations.random(800,1200));
+						Bank.close();
+						Sleep.sleepUntil(() -> !Bank.isOpen(), Calculations.random(800,1200));
 					}
 					else{
-						if(!getDialogues().canContinue()){
-							GameObject bankBooth = getGameObjects().closest("Bank booth");
+						if(!Dialogues.canContinue()){
+							GameObject bankBooth = GameObjects.closest("Bank booth");
 							if(bankBooth != null){
 								if(bankBooth.interact("Use")){
-									sleepUntil(new Condition(){
-										public boolean verify(){
-											return getDialogues().canContinue();
-										}
-									},Calculations.random(2400,3000));
+									Sleep.sleepUntil(() -> Dialogues.canContinue(),Calculations.random(2400,3000));
 								}
 							}
 						}
 						else{
-							getDialogues().clickContinue();
-							sleepUntil(new Condition(){
-								public boolean verify(){
-									return !getDialogues().canContinue();
-								}
-							},Calculations.random(1200,1400));
+							Dialogues.clickContinue();
+							Sleep.sleepUntil(() -> !Dialogues.canContinue(),Calculations.random(1200,1400));
 						}
 					}
 
@@ -1084,48 +860,36 @@ public class TutorialIsland extends AbstractScript{
 				//continue through convo
 				break;
 			case 520:
-				if(getBank().isOpen()){
-					getBank().close();
-					sleepUntil(new Condition(){
-						public boolean verify(){
-							return !getBank().isOpen();
-						}
-					},Calculations.random(1200,1600));
+				if(Bank.isOpen()){
+					Bank.close();
+					Sleep.sleepUntil(() -> !Bank.isOpen(),Calculations.random(1200,1600));
 				}
 				else{
-					if(getPlayerSettings().getConfig(POLL_OPEN) == 0){
-						GameObject pbooth = getGameObjects().closest("Poll booth");
+					if(PlayerSettings.getConfig(POLL_OPEN) == 0){
+						GameObject pbooth = GameObjects.closest("Poll booth");
 						if(pbooth != null){
 							if(pbooth.interact("Use")){
 								walkingSleep();
-								sleepUntil(new Condition(){
-									public boolean verify(){
-										return getDialogues().canContinue();
-									}
-								},2400);
+								Sleep.sleepUntil(() -> Dialogues.canContinue(),2400);
 							}
 						}
-						if(getDialogues().canContinue()){
-							while(getDialogues().canContinue() || getPlayerSettings().getConfig(POLL_OPEN) == 0){
-								getDialogues().clickContinue();
+						if(Dialogues.canContinue()){
+							while(Dialogues.canContinue() || PlayerSettings.getConfig(POLL_OPEN) == 0){
+								Dialogues.clickContinue();
 								sleep(300,500);
 							}
 						}
-						log("Poll config: " + getPlayerSettings().getConfig(POLL_OPEN));
+						log("Poll config: " + PlayerSettings.getConfig(POLL_OPEN));
 					}
 					sleep(300,500);
-					if(getPlayerSettings().getConfig(POLL_OPEN) > 0){
-						WidgetChild bar = getWidgets().getChildWidget(310,1);
+					if(PlayerSettings.getConfig(POLL_OPEN) > 0){
+						WidgetChild bar = Widgets.getChildWidget(310,1);
 						if(bar != null){
 							bar = bar.getChild(11);
 						}
 						if(bar != null && bar.isVisible()){
 							bar.interact();
-							sleepUntil(new Condition(){
-								public boolean verify(){
-									return getPlayerSettings().getConfig(POLL_OPEN) == 0;
-								}
-							}, Calculations.random(1200,1500));
+							Sleep.sleepUntil(() -> PlayerSettings.getConfig(POLL_OPEN) == 0, Calculations.random(1200,1500));
 						}
 					}
 				}
@@ -1134,38 +898,28 @@ public class TutorialIsland extends AbstractScript{
 				//close poll booth
 				break;
 			case 525:
-				if(getPlayerSettings().getConfig(POLL_OPEN) > 0){
-					WidgetChild bar = getWidgets().getChildWidget(345,1);
+				if(PlayerSettings.getConfig(POLL_OPEN) > 0){
+					WidgetChild bar = Widgets.getChildWidget(345,1);
 					if(bar != null){
 						bar = bar.getChild(11);
 					}
 					if(bar != null && bar.isVisible()){
 						bar.interact();
-						sleepUntil(new Condition(){
-							public boolean verify(){
-								return getPlayerSettings().getConfig(POLL_OPEN) == 0;
-							}
-						}, Calculations.random(1200,1500));
+						Sleep.sleepUntil(() -> PlayerSettings.getConfig(POLL_OPEN) == 0, Calculations.random(1200,1500));
 					}
 				}
 				else{
-				door = getGameObjects().closest(new Filter<GameObject>(){
-					public boolean match(GameObject g){
-						if(g == null || g.getName() == null)
-							return false;
-						if(!g.getName().equals("Door"))
-							return false;
-						return g.getTile().equals(new Tile(3125,3124,0));
-					}
+				door = GameObjects.closest(g -> {
+					if(g == null || g.getName() == null)
+						return false;
+					if(!g.getName().equals("Door"))
+						return false;
+					return g.getTile().equals(new Tile(3125,3124,0));
 				});
 				if(door != null){
 					if(door.interact("Open")){
 						walkingSleep();
-						sleepUntil(new Condition(){
-							public boolean verify(){
-								return getPlayerSettings().getConfig(TUT_PROG) != 525;
-							}
-						},Calculations.random(1600,2400));
+						Sleep.sleepUntil(() -> PlayerSettings.getConfig(TUT_PROG) != 525,Calculations.random(1600,2400));
 					}
 				}
 				//go through door
@@ -1176,44 +930,36 @@ public class TutorialIsland extends AbstractScript{
 				//talk to financial guy
 				break;
 			case 540:
-				door = getGameObjects().closest(new Filter<GameObject>(){
-					public boolean match(GameObject g){
-						if(g == null || g.getName() == null)
-							return false;
-						if(!g.getName().equals("Door"))
-							return false;
-						return g.getTile().equals(new Tile(3130,3124,0));
-					}
+				door = GameObjects.closest(g -> {
+					if(g == null || g.getName() == null)
+						return false;
+					if(!g.getName().equals("Door"))
+						return false;
+					return g.getTile().equals(new Tile(3130,3124,0));
 				});
 				if(door != null){
 					if(door.interact("Open")){
 						walkingSleep();
-						sleepUntil(new Condition(){
-							public boolean verify(){
-								return getPlayerSettings().getConfig(TUT_PROG) != 540;
-							}
-						},Calculations.random(1600,2400));
+						Sleep.sleepUntil(() -> PlayerSettings.getConfig(TUT_PROG) != 540,Calculations.random(1600,2400));
 					}
 				}
 				//go through door
 				break;
 			case 550:
-				if(getLocalPlayer().getTile().distance(new Tile(3126,3106,0)) > 5){
-					getWalking().walk(finToPray[finToPray.length-1]);//, Calculations.random(10,15));
+				if(Players.getLocal().getTile().distance(new Tile(3126,3106,0)) > 5){
+					Walking.walk(finToPray[finToPray.length-1]);//, Calculations.random(10,15));
 					walkingSleep();
 				}
 				else{
-					gate = getGameObjects().closest(new Filter<GameObject>(){
-						public boolean match(GameObject g){
-							if(g == null || g.getName() == null){
-								return false;
-							}
-							if(!g.getName().equals("Large door"))
-								return false;
-							return g.getTile().equals(new Tile(3129,3107,0));
+					gate = GameObjects.closest(g -> {
+						if(g == null || g.getName() == null){
+							return false;
 						}
+						if(!g.getName().equals("Large door"))
+							return false;
+						return g.getTile().equals(new Tile(3129,3107,0));
 					});
-					if(gate != null && !getMap().canReach(getNpcs().closest(PRAY_GUIDE).getTile())){
+					if(gate != null && !Map.canReach(NPCs.closest(PRAY_GUIDE).getTile())){
 						if(gate.interact("Open")){
 							sleep(600,900);
 						}
@@ -1239,22 +985,18 @@ public class TutorialIsland extends AbstractScript{
 				//open ignore
 				break;
 			case 610:
-				door = getGameObjects().closest("Door");
+				door = GameObjects.closest("Door");
 				if(door != null){
 					if(door.interact("Open")){
 						walkingSleep();
-						sleepUntil(new Condition(){
-							public boolean verify(){
-								return getPlayerSettings().getConfig(TUT_PROG) != 610;
-							}
-						},Calculations.random(1600,2400));
+						Sleep.sleepUntil(() -> PlayerSettings.getConfig(TUT_PROG) != 610,Calculations.random(1600,2400));
 					}
 				}
 				//open door
 				break;
 			case 620:
-				if(getLocalPlayer().getTile().distance(new Tile(3141,3088,0)) > 5){
-					getWalking().walk(prayToMage[prayToMage.length-1]);//;,Calculations.random(10,15));
+				if(Players.getLocal().getTile().distance(new Tile(3141,3088,0)) > 5){
+					Walking.walk(prayToMage[prayToMage.length-1]);//;,Calculations.random(10,15));
 					walkingSleep();
 				}
 				else{
@@ -1270,28 +1012,24 @@ public class TutorialIsland extends AbstractScript{
 				//talk to mage guy
 				break;
 			case 650:
-				if(getLocalPlayer().getTile().distance(new Tile(3139,3091,0)) > 2){
-					getWalking().walk(new Tile(3139,3091,0));
+				if(Players.getLocal().getTile().distance(new Tile(3139,3091,0)) > 2){
+					Walking.walk(new Tile(3139,3091,0));
 					walkingSleep();
 				}
 				else{
-					if(getMagic().castSpellOn(Normal.WIND_STRIKE, getNpcs().closest("Chicken"))){
-						sleepUntil(new Condition(){
-							public boolean verify(){
-								return getPlayerSettings().getConfig(TUT_PROG) != 650;
-							}
-						},Calculations.random(1600,2400));
+					if(Magic.castSpellOn(Normal.WIND_STRIKE, NPCs.closest("Chicken"))){
+						Sleep.sleepUntil(() -> PlayerSettings.getConfig(TUT_PROG) != 650,Calculations.random(1600,2400));
 					}
 				}
 				//click spell
 				//click chicken
 				break;
 			case 670:
-				if(getDialogues().getOptions() == null){
+				if(Dialogues.getOptions() == null){
 					talkTo(MAGIC_GUIDE);
 				}
 				else{
-					getDialogues().clickOption(1);
+					Dialogues.clickOption(1);
 				}
 				break;
 			case 1000:
@@ -1304,20 +1042,16 @@ public class TutorialIsland extends AbstractScript{
 			}
 			break;
 		case OPEN_TAB:
-			if(getDialogues().canContinue()){
-				getDialogues().clickContinue();
+			if(Dialogues.canContinue()){
+				Dialogues.clickContinue();
 			}
 			final Tab t = getTab();
 			if(t == null){
 				log("Tab is null?");
 				break;
 			}
-			if(getTabs().openWithMouse(t)){
-				sleepUntil(new Condition(){
-					public boolean verify(){
-						return getTabs().isOpen(t);
-					}
-				},Calculations.random(1200,1600));
+			if(Tabs.openWithMouse(t)){
+				Sleep.sleepUntil(() -> Tabs.isOpen(t),Calculations.random(1200,1600));
 			}
 			break;
 		}
@@ -1325,119 +1059,58 @@ public class TutorialIsland extends AbstractScript{
 	}
 
 	private void login(){
-		int tries = 0;
-		while(getClient().getGameState() == GameState.LOGIN_SCREEN && tries < 10){
-			tries++;
-			switch (getClient().getLoginIndex()) {
-            case 0:
-                RectangleDestination button = new RectangleDestination(getClient(), new Rectangle(400, 279, 125, 26));
-                new InteractionEvent(button).interact();
-                break;
-            case 1:
-                button = new RectangleDestination(getClient(), new Rectangle(227, 301, 148, 35));
-                new InteractionEvent(button).interact();
-                break;
-            case 3:
-                button = new RectangleDestination(getClient(), new Rectangle(307, 301, 148, 35));
-                new InteractionEvent(button).interact();
-                break;
-            case 2:
-                if (getClient().getUsername().length() > 0 || getClient().getPassword().length() > 0) {
-                    // Click cancel to restart
-                    button = new RectangleDestination(getClient(), new Rectangle(387, 301, 148, 35));
-                    new InteractionEvent(button).interact();
-                    break;
-                } else {
-                    getKeyboard().type(sv.getEmail(), true);
-                    MethodProvider.sleep(300, 800);
-                    getKeyboard().type(sv.pass, true);
-                    return;
-                }
-        }
-			sleep(800,1200);
-		}
+		LoginUtility.login(sv.email, sv.pass);
+		sleep(800,1200);
 	}
 	
 	private void cookShrimp(){
-		GameObject fire = getGameObjects().closest("Fire");
+		GameObject fire = GameObjects.closest("Fire");
 		if(fire == null)
 			lightFire();
 		else{
-			if(!getInventory().isItemSelected()){
-				if(getInventory().interact("Raw shrimps", "Use")){
-					sleepUntil(new Condition(){
-						public boolean verify(){
-							return getInventory().isItemSelected();
-						}
-					},Calculations.random(800,1200));
+			if(!Inventory.isItemSelected()){
+				if(Inventory.interact("Raw shrimps", "Use")){
+					Sleep.sleepUntil(() -> Inventory.isItemSelected(),Calculations.random(800,1200));
 				}
 			}
-			if(getInventory().isItemSelected()){
+			if(Inventory.isItemSelected()){
 				if(fire.interact("Use")){
 					walkingSleep();
-					sleepUntil(new Condition(){
-						public boolean verify(){
-							return getLocalPlayer().getAnimation() != -1;
-						}
-					},Calculations.random(2000,3000));
-					sleepUntil(new Condition(){
-						public boolean verify(){
-							return getLocalPlayer().getAnimation() == -1;
-						}
-					},Calculations.random(2000,3000));
+					Sleep.sleepUntil(() -> Players.getLocal().getAnimation() != -1,Calculations.random(2000,3000));
+					Sleep.sleepUntil(() -> Players.getLocal().getAnimation() == -1,Calculations.random(2000,3000));
 				}
 			}
 		}
 	}
 
 	private void lightFire(){
-		if(!getInventory().contains("Logs")){
-			GameObject tree = getGameObjects().closest("Tree");
+		if(!Inventory.contains("Logs")){
+			GameObject tree = GameObjects.closest("Tree");
 			if(tree != null){
 				if(tree.interact("Chop down")){
 					walkingSleep();
-					sleepUntil(new Condition(){
-						public boolean verify(){
-							return getInventory().contains("Logs");
-						}
-					},Calculations.random(1200, 1600));
+					Sleep.sleepUntil(() -> Inventory.contains("Logs"),Calculations.random(1200, 1600));
 				}
-				if(getLocalPlayer().getAnimation() != -1){
-					sleepUntil(new Condition(){
-						public boolean verify(){
-							return getInventory().contains("Logs");
-						}
-					},Calculations.random(4000,5000));
+				if(Players.getLocal().getAnimation() != -1){
+					Sleep.sleepUntil(() -> Inventory.contains("Logs"),Calculations.random(4000,5000));
 				}
 			}
 		}
-		if(getInventory().contains("Logs")){
-			if(!getInventory().isItemSelected()){
-				getInventory().interact("Tinderbox", "Use");
-				sleepUntil(new Condition(){
-					public boolean verify(){
-						return getInventory().isItemSelected();
-					}
-				},Calculations.random(800,1200));
+		if(Inventory.contains("Logs")){
+			if(!Inventory.isItemSelected()){
+				Inventory.interact("Tinderbox", "Use");
+				Sleep.sleepUntil(() -> Inventory.isItemSelected(),Calculations.random(800,1200));
 			}
-			if(getInventory().isItemSelected()){
-				getInventory().interact("Logs", "Use");
-				sleepUntil(new Condition(){
-					public boolean verify(){
-						return getLocalPlayer().getAnimation() != -1;
-					}
-				},Calculations.random(1200,1600));
-				sleepUntil(new Condition(){
-					public boolean verify(){
-						return getLocalPlayer().getAnimation() == -1;
-					}
-				},Calculations.random(6000,8000));
+			if(Inventory.isItemSelected()){
+				Inventory.interact("Logs", "Use");
+				Sleep.sleepUntil(() -> Players.getLocal().getAnimation() != -1,Calculations.random(1200,1600));
+				Sleep.sleepUntil(() -> Players.getLocal().getAnimation() == -1,Calculations.random(6000,8000));
 			}
 		}
 	}
 
 	private void talkTo(String npc){
-		List<WidgetChild> clickToContinue = getWidgets().getWidgetChildrenContainingText("Click to continue");
+		List<WidgetChild> clickToContinue = Widgets.getWidgetChildrenContainingText("Click to continue");
 		if(!clickToContinue.isEmpty()){
 			WidgetChild wc = clickToContinue.get(0);
 			if(wc != null && wc.isVisible()){
@@ -1446,91 +1119,62 @@ public class TutorialIsland extends AbstractScript{
 				sleep(900,1200);
 			}
 		}
-		if(!getDialogues().canContinue()){
-			final NPC guide = getNpcs().closest(npc);
+		if(!Dialogues.canContinue()){
+			final NPC guide = NPCs.closest(npc);
 			if(guide != null){
 				if(guide.isOnScreen()){
 					if(guide.interact("Talk-to")){
 						walkingSleep();
-						sleepUntil(new Condition(){
-							public boolean verify(){
-								return getDialogues().canContinue();
-							}
-						},Calculations.random(1200,1600));
+						Sleep.sleepUntil(() -> Dialogues.canContinue(),Calculations.random(1200,1600));
 					}
 				}
 				else{
-					getWalking().walk(guide);
+					Walking.walk(guide);
 					walkingSleep();
 				}
 			}
 		}
 		else{
 			log("Clicking continue");
-			getDialogues().clickContinue();
+			Dialogues.clickContinue();
 			sleep(600,900);
 		}
 	}
 
+	private final Tab[] tabs = new Tab[]{Tab.COMBAT,Tab.SKILLS,Tab.QUEST,Tab.INVENTORY,Tab.EQUIPMENT,
+			Tab.PRAYER,Tab.MAGIC,Tab.CLAN,Tab.ACCOUNT_MANAGEMENT,Tab.FRIENDS,Tab.LOGOUT,Tab.OPTIONS, Tab.EMOTES, Tab.MUSIC};
+
 	private Tab getTab(){
-		int conf = getPlayerSettings().getConfig(TAB_CONFIG);
-		switch(conf){
-		case 1:
-			return Tab.COMBAT;
-		case 2:
-			return Tab.STATS;
-		case 3:
-			return Tab.QUEST;
-		case 4:
-			return Tab.INVENTORY;
-		case 5:
-			return Tab.EQUIPMENT;
-		case 6:
-			return Tab.PRAYER;
-		case 7:
-			return Tab.MAGIC;
-		case 8:
-			return Tab.CLAN;
-		case 9:
-			return Tab.FRIENDS;
-		case 10:
-			return Tab.IGNORE;
-		case 11:
-			return Tab.LOGOUT;
-		case 12:
-			return Tab.OPTIONS;
-		case 13:
-			return Tab.EMOTES;
-		case 14:
-			return Tab.MUSIC;
+		int conf = PlayerSettings.getConfig(1021)&15;
+		conf-=1;
+		int conf2 = PlayerSettings.getConfig(281);
+		if(conf2 == 580){
+			conf = 9;
+		}
+		if(conf2 == 590)
+			conf = 8;
+		if(conf >= 0 && conf < tabs.length){
+			return tabs[conf];
 		}
 		return null;
 	}
 	
 	private void walkingSleep(){
-		sleepUntil(new Condition(){
-			public boolean verify(){
-				return getLocalPlayer().isMoving();
-			}
-		}, Calculations.random(1200,1600));
-		sleepUntil(new Condition(){
-			public boolean verify(){
-				return !getLocalPlayer().isMoving();
-			}
-		},Calculations.random(2400,3600));
+		Sleep.sleepUntil(() -> Players.getLocal().isMoving(), Calculations.random(1200,1600));
+		Sleep.sleepUntil(() -> !Players.getLocal().isMoving(),Calculations.random(2400,3600));
 	}
 
 	public void onPaint(Graphics g){
 		if(state != null){
-			g.drawString("State: " + state.toString(), 10, 25);
+			g.drawString("State: " + state, 10, 25);
 		}
-		g.drawString("Current progress: " + getPlayerSettings().getConfig(TUT_PROG), 10, 40);
+		g.drawString("Current progress: " + PlayerSettings.getConfig(TUT_PROG), 10, 40);
 		if(t != null)
 			g.drawString("Runtime: " + t.formatTime(), 10, 55);
 		if(!sv.finalName.equals(""))
 			g.drawString("Final username: " + sv.finalName, 10, 70);
 		if(accMade){
-			g.drawString("Login index: " + getClient().getLoginIndex(), 10, 85);
+			g.drawString("Login index: " + Client.getLoginIndex(), 10, 85);
 		}
 	}
 

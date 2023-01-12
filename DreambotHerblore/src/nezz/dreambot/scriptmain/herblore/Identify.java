@@ -5,29 +5,33 @@ import nezz.dreambot.tools.PricedItem;
 
 import org.dreambot.api.methods.Calculations;
 import org.dreambot.api.methods.MethodProvider;
+import org.dreambot.api.methods.container.impl.Inventory;
+import org.dreambot.api.methods.container.impl.bank.Bank;
 import org.dreambot.api.script.AbstractScript;
+import org.dreambot.api.utilities.Sleep;
 import org.dreambot.api.utilities.impl.Condition;
 import org.dreambot.api.wrappers.items.Item;
+import org.dreambot.api.wrappers.widgets.Menu;
 
 public class Identify extends States{
 
 	public Identify(AbstractScript as, ScriptVars sv){
 		this.as = as;
 		this.sv = sv;
-		this.lootList.add(new PricedItem(sv.yourHerb.getName(), sv.yourHerb.getUnnotedCleanId(), as.getClient().getMethodContext(), false));
+		this.lootList.add(new PricedItem(sv.yourHerb.getName(), sv.yourHerb.getUnnotedCleanId(),false));
 	}
 	Condition depositItems = new Condition(){
 		public boolean verify(){
-			return as.getInventory().isEmpty();
+			return Inventory.isEmpty();
 		}
 	};
 	Condition withdrawItems = new Condition(){
 		public boolean verify(){
-			return !as.getInventory().isEmpty();
+			return !Inventory.isEmpty();
 		}
 	};
 	public String getState(){
-		if(as.getInventory().contains(sv.yourHerb.getUnnotedGrimyId()))
+		if(Inventory.contains(sv.yourHerb.getUnnotedGrimyId()))
 			return "IDENTIFY";
 		else
 			return "BANK";
@@ -38,42 +42,43 @@ public class Identify extends States{
 		state = getState();
 		switch(state){
 		case "BANK":
-			if(as.getBank().isOpen()){
-				if(as.getInventory().contains(sv.yourHerb.getUnnotedCleanId())){
-					as.getBank().depositAllItems();
-					MethodProvider.sleepUntil(depositItems,2000);
+			if(Bank.isOpen()){
+				if(Inventory.contains(sv.yourHerb.getUnnotedCleanId())){
+					Bank.depositAllItems();
+					Sleep.sleepUntil(depositItems,2000);
 					returnThis = 200;
 				}
 				else{
-					if(as.getBank().contains(sv.yourHerb.getUnnotedGrimyId())){
-						as.getBank().withdrawAll(sv.yourHerb.getUnnotedGrimyId());
-						MethodProvider.sleepUntil(withdrawItems,2000);
+					if(Bank.contains(sv.yourHerb.getUnnotedGrimyId())){
+						Bank.withdrawAll(sv.yourHerb.getUnnotedGrimyId());
+						Sleep.sleepUntil(withdrawItems,2000);
 						returnThis = 200;
 					}
 					else{
-						as.getBank().close();
+						Bank.close();
 						returnThis = -1;
 					}
 				}
 			}
 			else{
 				updateLoot();
-				as.getBank().open();
-				if(as.getClient().getMenu().containsAction("Use"))
-					as.getMouse().click();
+				Bank.open();
+				if(Inventory.isItemSelected()){
+					Inventory.deselect();
+				}
 				returnThis = 200;
 			}
 			break;
 		case "IDENTIFY":
-			if(as.getBank().isOpen()){
-				as.getBank().close();
+			if(Bank.isOpen()){
+				Bank.close();
 			}
 			else{
 				for(int i = 0; i < 28; i++){
-					Item item = as.getInventory().getItemInSlot(i);
+					Item item = Inventory.getItemInSlot(i);
 					if(item != null && item.getName().contains("Grimy")){
-						as.getInventory().slotInteract(i, "Clean");
-						MethodProvider.sleep(100,300);
+						Inventory.slotInteract(i, "Clean");
+						Sleep.sleep(100,300);
 						this.updateLoot();
 					}
 				}

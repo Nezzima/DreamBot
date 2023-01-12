@@ -11,14 +11,24 @@ import nezz.dreambot.fisher.gui.fisherGui;
 import nezz.dreambot.tools.PricedItem;
 import nezz.dreambot.tools.RunTimer;
 
+import org.dreambot.api.Client;
 import org.dreambot.api.methods.Calculations;
+import org.dreambot.api.methods.container.impl.Inventory;
+import org.dreambot.api.methods.container.impl.bank.Bank;
 import org.dreambot.api.methods.filter.Filter;
+import org.dreambot.api.methods.interactive.NPCs;
+import org.dreambot.api.methods.interactive.Players;
 import org.dreambot.api.methods.map.Area;
+import org.dreambot.api.methods.map.Map;
 import org.dreambot.api.methods.map.Tile;
 import org.dreambot.api.methods.skills.Skill;
+import org.dreambot.api.methods.skills.SkillTracker;
+import org.dreambot.api.methods.skills.Skills;
+import org.dreambot.api.methods.walking.impl.Walking;
 import org.dreambot.api.script.AbstractScript;
 import org.dreambot.api.script.Category;
 import org.dreambot.api.script.ScriptManifest;
+import org.dreambot.api.utilities.Sleep;
 import org.dreambot.api.utilities.impl.Condition;
 import org.dreambot.api.wrappers.interactive.NPC;
 import org.dreambot.api.wrappers.interactive.Player;
@@ -61,7 +71,7 @@ public class Fisher extends AbstractScript{
 	}
 	
 	private State getState(){
-		if(getInventory().isFull()){
+		if(Inventory.isFull()){
 			if(sv.powerFish){
 				return State.DROP;
 			}
@@ -80,13 +90,13 @@ public class Fisher extends AbstractScript{
 			Tile e = new Tile(t.getX()+1, t.getY(), t.getZ());
 			Tile s = new Tile(t.getX(), t.getY() -1, t.getZ());
 			Tile w = new Tile(t.getX()-1, t.getY(), t.getZ());
-			if(getMap().canReach(n))
+			if(Map.canReach(n))
 				walkableTile = n;
-			else if(getMap().canReach(e))
+			else if(Map.canReach(e))
 				walkableTile = e;
-			else if(getMap().canReach(s))
+			else if(Map.canReach(s))
 				walkableTile = s;
-			else if(getMap().canReach(w))
+			else if(Map.canReach(w))
 				walkableTile = w;
 			else
 				walkableTile = null;
@@ -112,10 +122,10 @@ public class Fisher extends AbstractScript{
 		while(!sv.started){
 			sleep(100);
 		}
-		startTile = getPlayers().myPlayer().getTile();
-		getSkillTracker().start(Skill.FISHING);
+		startTile = Players.getLocal().getTile();
+		SkillTracker.start(Skill.FISHING);
 		for(String s : sv.yourFish.getFish()){
-			lootTrack.add(new PricedItem(s, getClient().getMethodContext(), false));
+			lootTrack.add(new PricedItem(s,false));
 		}
 		timer = new RunTimer();
 		log("Starting DreamBot's AIO Fishing script!");
@@ -123,9 +133,9 @@ public class Fisher extends AbstractScript{
 	}
 	
 	private boolean needToStop(){
-		if(!getInventory().contains(sv.yourFish.getItemName()))
+		if(!Inventory.contains(sv.yourFish.getItemName()))
 			return true;
-		if(!sv.yourFish.getRequiredItem().equals("") && !getInventory().contains(sv.yourFish.getRequiredItem()))
+		if(!sv.yourFish.getRequiredItem().equals("") && !Inventory.contains(sv.yourFish.getRequiredItem()))
 			return true;
 		return false;
 	}
@@ -142,44 +152,43 @@ public class Fisher extends AbstractScript{
 			stop();
 			return 1;
 		}
-		Player myPlayer = getPlayers().myPlayer();
-		if(!getWalking().isRunEnabled() && getWalking().getRunEnergy() > Calculations.random(30,70)){
-			getWalking().toggleRun();
-			sleepUntil(new Condition(){
+		Player myPlayer = Players.getLocal();
+		if(!Walking.isRunEnabled() && Walking.getRunEnergy() > Calculations.random(30,70)){
+			Walking.toggleRun();
+			Sleep.sleepUntil(new Condition(){
 				public boolean verify(){
-					return getWalking().isRunEnabled();
+					return Walking.isRunEnabled();
 				}
 			},1200);
 		}
-		if(myPlayer.isMoving() && getClient().getDestination() != null && getClient().getDestination().distance(myPlayer) > 5)
+		if(myPlayer.isMoving() && Client.getDestination() != null && Client.getDestination().distance(myPlayer) > 5)
 			return Calculations.random(300, 600);
 		state = getState();
 		switch(state){
 		case BANK:
-			if(getBank().isOpen()){
+			if(Bank.isOpen()){
 				for(int i = 0; i < 28; i++){
-					Item item = getInventory().getItemInSlot(i);
+					Item item = Inventory.getItemInSlot(i);
 					if(item != null){
 						if(item.getName().equals(sv.yourFish.getItemName()) || item.getName().equals(sv.yourFish.getRequiredItem()))
 							continue;
 						else{
-							getBank().depositAll(item.getName());
+							Bank.depositAll(item.getName());
 							sleep(600);
 						}
 					}
 				}
 			}
 			else{
-				getClient().disableIdleCamera();
 				Area a = sv.yourBank.getArea(5);
-				if(a.contains(getPlayers().myPlayer().getTile())){
-					getBank().open(sv.yourBank);
+				if(a.contains(Players.getLocal().getTile())){
+					Bank.open(sv.yourBank);
 				}
 				else{
-					getWalking().walk(sv.yourBank.getCenter());
-					sleepUntil(new Condition(){
+					Walking.walk(sv.yourBank.getCenter());
+					Sleep.sleepUntil(new Condition(){
 						public boolean verify(){
-							return getLocalPlayer().isMoving();
+							return Players.getLocal().isMoving();
 						}
 					},1200);
 				}
@@ -187,32 +196,31 @@ public class Fisher extends AbstractScript{
 			break;
 		case DROP:
 			for(int i = 0; i < 28; i++){
-				Item item = getInventory().getItemInSlot(i);
+				Item item = Inventory.getItemInSlot(i);
 				if(item != null && !item.getName().equals(sv.yourFish.getItemName()) && !item.getName().equals(sv.yourFish.getRequiredItem())){
-					getInventory().interact(i, "Drop");
+					Inventory.interact(i, "Drop");
 					sleep(Calculations.random(150,350));
 				}
 			}
 			break;
 		case FISH:
-			if(getBank().isOpen()){
-				getBank().close();
-				sleepUntil(new Condition(){
+			if(Bank.isOpen()){
+				Bank.close();
+				Sleep.sleepUntil(new Condition(){
 					public boolean verify(){
-						return !getBank().isOpen();
+						return !Bank.isOpen();
 					}
 				},1200);
 			}
 			if(myPlayer.getAnimation() == -1 || (System.currentTimeMillis() - activeTime > Calculations.random(250000,280000))){
-				NPC pool = getNpcs().closest(poolFilter);
+				NPC pool = NPCs.closest(poolFilter);
 				myPool = pool;
 				if(pool != null){
-					getClient().enableIdleCamera();
-					if(pool.isOnScreen() && pool.distance(getLocalPlayer()) < 5){
+					if(pool.isOnScreen() && pool.distance(Players.getLocal()) < 5){
 						pool.interact(sv.yourFish.getRequiredActions()[0]);
-						sleepUntil(new Condition(){
+						Sleep.sleepUntil(new Condition(){
 							public boolean verify(){
-								return getLocalPlayer().getAnimation() != -1;
+								return Players.getLocal().getAnimation() != -1;
 							}
 						},1200);
 						sleep(1500);
@@ -220,32 +228,31 @@ public class Fisher extends AbstractScript{
 					}
 					else{
 						log("Walk to pool");
-						getWalking().walk(getWalkableTile(myPool));
-						sleepUntil(new Condition(){
+						Walking.walk(getWalkableTile(myPool));
+						Sleep.sleepUntil(new Condition(){
 							public boolean verify(){
-								return getPlayers().myPlayer().isMoving();
+								return Players.getLocal().isMoving();
 							}
 						},1000);
 					}
 				}
 				else{
-					if(this.startTile.distance(getLocalPlayer()) < 15)
+					if(this.startTile.distance(Players.getLocal()) < 15)
 						sleep(600);
 					else{
-						getClient().disableIdleCamera();
 						if(myPlayer.distance(startTile) > 5){
-							getWalking().walk(startTile);
-							sleepUntil(new Condition(){
+							Walking.walk(startTile);
+							Sleep.sleepUntil(new Condition(){
 								public boolean verify(){
-									return getLocalPlayer().isMoving();
+									return Players.getLocal().isMoving();
 								}
 							},1200);
 						}
 						else{
-							getWalking().walk(myPlayer.getTile());
-							sleepUntil(new Condition(){
+							Walking.walk(myPlayer.getTile());
+							Sleep.sleepUntil(new Condition(){
 								public boolean verify(){
-									return getLocalPlayer().isMoving();
+									return Players.getLocal().isMoving();
 								}
 							},1200);
 							sleep(300);
@@ -256,7 +263,7 @@ public class Fisher extends AbstractScript{
 			break;
 		}
 		updateLoot();
-		return (int)Calculations.gRandom(500, 200);
+		return (int)Calculations.nextGaussianRandom(500, 200);
 	}
 	
 	@Override
@@ -267,9 +274,9 @@ public class Fisher extends AbstractScript{
 	public void onPaint(Graphics g) {
 		if(started){
 			g.setColor(Color.green);
-			g.drawString("Experience(p/h): " + getSkillTracker().getGainedExperience(Skill.FISHING) + "(" + getSkillTracker().getGainedExperiencePerHour(Skill.FISHING) + ")",5, 90);
+			g.drawString("Experience(p/h): " + SkillTracker.getGainedExperience(Skill.FISHING) + "(" + SkillTracker.getGainedExperiencePerHour(Skill.FISHING) + ")",5, 90);
 			g.drawString("Runtime: " + timer.format(), 5, 105);
-			g.drawString("Level(gained): " + getSkills().getRealLevel(Skill.FISHING) + "(" + getSkillTracker().getGainedLevels(Skill.FISHING) + ")", 5, 120);
+			g.drawString("Level(gained): " + Skills.getRealLevel(Skill.FISHING) + "(" + SkillTracker.getGainedLevels(Skill.FISHING) + ")", 5, 120);
 			int place = 0;
 			for(int i = 0; i < lootTrack.size(); i++){
 				PricedItem p = lootTrack.get(i);
