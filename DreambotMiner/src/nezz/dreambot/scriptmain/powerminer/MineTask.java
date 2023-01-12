@@ -16,37 +16,33 @@ import org.dreambot.api.wrappers.items.Item;
 import java.util.List;
 
 public class MineTask {
-	private String goal = "";
-	private Tile startTile = null;
+	private String goal;
+	private Tile startTile;
 	private int[] ids;
-	private boolean powermine = false;
+	private boolean powermine;
 	private Timer t;
-	private String oreName = "";
+	private String oreName;
 	private PricedItem oreTracker;
 	private BankLocation bank;
 	private boolean finished = false;
-	private boolean dontMove = false;
-	
-	private final Filter<GameObject> rockFilter = new Filter<GameObject>(){
-		public boolean match(GameObject go){
-			if(go == null || !go.exists() || go.getName() == null || !go.getName().equals("Rocks"))
-				return false;
-			boolean hasID = false;
-			for(int i = 0; i < getIDs().length; i++){
-				if(go.getID() == getIDs()[i]){
-					hasID = true;
-					break;
-				}
+	private boolean dontMove;
+
+	private final Filter<GameObject> rockFilter = go -> {
+		if (go == null || !go.exists() || go.getName() == null || !go.getName().equals("Rocks"))
+			return false;
+		boolean hasID = false;
+		for (int i = 0; i < getIDs().length; i++) {
+			if (go.getID() == getIDs()[i]) {
+				hasID = true;
+				break;
 			}
-			if(!hasID)
-				return false;
-			if(dontMove() && go.distance(Players.getLocal()) > 1)
-				return false;
-			return true;
 		}
+		if (!hasID)
+			return false;
+		return !dontMove() || !(go.distance(Players.getLocal()) > 1);
 	};
-	
-	public MineTask(String oreName, int[] ids, Tile startTile, String goal, boolean powermine, BankLocation bank, boolean dontMove){
+
+	public MineTask(String oreName, int[] ids, Tile startTile, String goal, boolean powermine, BankLocation bank, boolean dontMove) {
 		this.oreName = oreName;
 		this.ids = ids;
 		this.startTile = startTile;
@@ -57,137 +53,153 @@ public class MineTask {
 		this.dontMove = dontMove;
 		t = new Timer();
 	}
-	
-	public boolean dontMove(){
+
+	public boolean dontMove() {
 		return this.dontMove;
 	}
-	
-	public void resetTimer(){
+
+	public void resetTimer() {
 		t = new Timer();
 	}
-	
-	public boolean reachedGoal(){
-		if(goal.toLowerCase().contains("bank")){
+
+	public boolean reachedGoal() {
+		if (goal.toLowerCase().contains("bank")) {
 			Item ore = Bank.get(oreName);
-			if(ore == null)
+			if (ore == null)
 				return false;
-			else{
-				if(ore.getAmount() >= Integer.parseInt(goal.split("=")[1])){
+			else {
+				if (ore.getAmount() >= Integer.parseInt(goal.split("=")[1])) {
 					this.finished = true;
 					return true;
 				}
 				return false;
 			}
-		}
-		else if(goal.toLowerCase().contains("level")){
-			this.finished =  Skills.getRealLevel(Skill.MINING) >= Integer.parseInt(goal.split("=")[1]);
+		} else if (goal.toLowerCase().contains("level")) {
+			this.finished = Skills.getRealLevel(Skill.MINING) >= Integer.parseInt(goal.split("=")[1]);
 			return finished;
-		}
-		else if(goal.toLowerCase().contains("mine")){
+		} else if (goal.toLowerCase().contains("mine")) {
 			this.finished = oreTracker.getAmount() >= Integer.parseInt(goal.split("=")[1]);
 			return finished;
 		}
 		return false;
 	}
-	
-	private GameObject getClosest(List<GameObject> rocks){
+
+	private GameObject getClosest(List<GameObject> rocks) {
 		GameObject currRock = null;
 		double dist = Double.MAX_VALUE;
-		for(GameObject go : rocks){
-			if(currRock == null){
+		for (GameObject go : rocks) {
+			if (currRock == null) {
 				currRock = go;
 				dist = go.distance(Players.getLocal());
 				continue;
 			}
 			double tempDist = go.distance(Players.getLocal());
-			if(tempDist < dist){
+			if (tempDist < dist) {
 				currRock = go;
 				dist = tempDist;
 			}
 		}
 		return currRock;
 	}
-	
-	public Filter<GameObject> getRockFilter(){
+
+	public Filter<GameObject> getRockFilter() {
 		return this.rockFilter;
 	}
-	
-	public GameObject getRock(){
+
+	public GameObject getRock() {
 		List<GameObject> acceptableRocks = GameObjects.all(rockFilter);
 		return getClosest(acceptableRocks);
 	}
-	
-	public boolean isPowerMine(){
+
+	public boolean isPowerMine() {
 		return powermine;
 	}
-	public Tile getStartTile(){
+
+	public Tile getStartTile() {
 		return startTile;
 	}
-	public String getGoal(){
+
+	public String getGoal() {
 		return goal;
 	}
-	public PricedItem getTracker(){
+
+	public PricedItem getTracker() {
 		return oreTracker;
 	}
-	public String getOreName(){
+
+	public String getOreName() {
 		return oreName;
 	}
-	public Timer getTimer(){
+
+	public Timer getTimer() {
 		return t;
 	}
-	public int[] getIDs(){
+
+	public int[] getIDs() {
 		return ids;
 	}
-	public BankLocation getBank(){
+
+	public BankLocation getBank() {
 		return bank;
 	}
-	public boolean getFinished(){
+
+	public boolean getFinished() {
 		return this.finished;
 	}
-	public void setDontMove(boolean dontMove){
+
+	public void setDontMove(boolean dontMove) {
 		this.dontMove = dontMove;
 	}
-	public void setPowerMine(boolean powermine){
+
+	public void setPowerMine(boolean powermine) {
 		this.powermine = powermine;
 	}
-	public void setStarTile(Tile startTile){
+
+	public void setStarTile(Tile startTile) {
 		this.startTile = startTile;
 	}
-	public void setGoal(String goal){
+
+	public void setGoal(String goal) {
 		this.goal = goal;
 	}
-	public void setTracker(PricedItem oreTracker){
+
+	public void setTracker(PricedItem oreTracker) {
 		this.oreTracker = oreTracker;
 	}
-	public void setOreName(String oreName){
+
+	public void setOreName(String oreName) {
 		this.oreName = oreName;
 	}
-	public void setIDs(int[] ids){
+
+	public void setIDs(int[] ids) {
 		this.ids = ids;
 	}
-	public void setBank(BankLocation bank){
+
+	public void setBank(BankLocation bank) {
 		this.bank = bank;
 	}
-	public void setFinished(boolean finished){
+
+	public void setFinished(boolean finished) {
 		this.finished = finished;
 	}
-	public String toString(){
+
+	public String toString() {
 		StringBuilder sb = new StringBuilder();
-		sb.append("Ore Name: " + oreName + "\n");
+		sb.append("Ore Name: ").append(oreName).append("\n");
 		sb.append("IDs: ");
-		for(int i =0; i < ids.length; i++){
-			if(ids[i] > 0)
+		for (int i = 0; i < ids.length; i++) {
+			if (ids[i] > 0)
 				sb.append(ids[i]);
-			if(i != ids.length-1 && ids[i+1] != 0){
+			if (i != ids.length - 1 && ids[i + 1] != 0) {
 				sb.append(",");
 			}
 		}
 		sb.append("\n");
-		sb.append("Tile: " + startTile.toString() + "\n");
-		sb.append("Bank: " + bank.toString() + "\n");
-		sb.append("Goal: " + goal + "\n");
-		sb.append("Powermine: " + powermine + "\n");
-		sb.append("Don't Move: " + dontMove);
+		sb.append("Tile: ").append(startTile.toString()).append("\n");
+		sb.append("Bank: ").append(bank.toString()).append("\n");
+		sb.append("Goal: ").append(goal).append("\n");
+		sb.append("Powermine: ").append(powermine).append("\n");
+		sb.append("Don't Move: ").append(dontMove);
 		return sb.toString();
 	}
 }

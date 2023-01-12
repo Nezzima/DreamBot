@@ -20,7 +20,6 @@ public class FileMethods {
 		}
 		else{
 			this.filepath = System.getProperty("scripts.path");
-			//this.filepath = "C:\\Users\\Public\\Nezz\\";
 			this.scriptName = filePath;
 			this.filepath+=scriptName + System.getProperty("file.separator");
 			System.out.println("FILE PATH: " + filepath);

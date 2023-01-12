@@ -1,6 +1,7 @@
 package nezz.dreambot.tools;
 
 import org.dreambot.api.methods.container.impl.Inventory;
+import org.dreambot.api.methods.grandexchange.LivePrices;
 import org.dreambot.api.utilities.Logger;
 
 public class PricedItem {
@@ -13,43 +14,32 @@ public class PricedItem {
 	public PricedItem(String name, boolean getPrice) {
 		this.name = name;
 		if (Inventory.contains(name)) {
-			lastCount = (int) Inventory.count(name);
+			lastCount = Inventory.count(name);
 		}
 		if (getPrice) {
 			String tempName = name;
 			if (name.contains("arrow"))
 				tempName += "s";
 			Logger.log("Getting price");
-			price = PriceGrab.getInstance().getPrice(tempName, 2);
+			price = LivePrices.get(tempName);
 			Logger.log("Got price: " + price);
 		} else
-			price = 0;
-	}
-
-	public PricedItem(String name, int id, boolean getPrice) {
-		this.name = name;
-		this.setId(id);
-		if (Inventory.contains(id))
-			lastCount = (int) Inventory.count(id);
-		if (getPrice)
-			price = PriceGrab.getInstance().getPrice(name, 2);
-		else
 			price = 0;
 	}
 
 	public void update() {
 		int increase = 0;
 		if (id == 0)
-			increase = (int) (Inventory.count(name) - lastCount);
+			increase = Inventory.count(name) - lastCount;
 		else
-			increase = (int) (Inventory.count(id) - lastCount);
+			increase = Inventory.count(id) - lastCount;
 		if (increase < 0)
 			increase = 0;
 		amount += increase;
 		if (id == 0)
-			lastCount = (int) Inventory.count(name);
+			lastCount = Inventory.count(name);
 		else
-			lastCount = (int) Inventory.count(id);
+			lastCount = Inventory.count(id);
 	}
 
 	public void setName(String name) {

@@ -28,16 +28,12 @@ public class UnfPotions extends States {
 		return "Making Unfinished potions: " + sv.yourPot.getName();
 	}
 
-	Condition makePot = new Condition() {
-		public boolean verify() {
-			return Widgets.getChildWidget(309, 2) != null;
-		}
-	};
+	Condition makePot = () -> Widgets.getChildWidget(309, 2) != null;
 
 	private boolean wasAnimating = false;
 
 	@Override
-	public int execute() throws InterruptedException {
+	public int execute() {
 		int returnThis = -1;
 		this.state = getState();
 		switch (state) {
@@ -57,11 +53,7 @@ public class UnfPotions extends States {
 					if (child != null) {
 						if (child.interact("Make All")) {
 							wasAnimating = true;
-							Sleep.sleepUntil(new Condition() {
-								public boolean verify() {
-									return Players.getLocal().getAnimation() != -1;
-								}
-							}, 1200);
+							Sleep.sleepUntil(() -> Players.getLocal().getAnimation() != -1, 1200);
 						} else {
 							wasAnimating = false;
 						}
@@ -79,7 +71,6 @@ public class UnfPotions extends States {
 					} else {
 						Inventory.interact("Vial of water", "Use");
 						Sleep.sleepUntil(makePot, 2000);
-						returnThis = 400;
 						Widget par = Widgets.getWidget(309);
 						WidgetChild child = null;
 						if (par != null) {
@@ -88,15 +79,10 @@ public class UnfPotions extends States {
 						if (child != null) {
 							if (child.interact("Make All")) {
 								wasAnimating = true;
-								Sleep.sleepUntil(new Condition() {
-									public boolean verify() {
-										return Players.getLocal().getAnimation() != -1;
-									}
-								}, 1200);
+								Sleep.sleepUntil(() -> Players.getLocal().getAnimation() != -1, 1200);
 							} else {
 								wasAnimating = false;
 							}
-							returnThis = 400;
 						} else {
 							wasAnimating = false;
 							Logger.log("Issues?");
@@ -111,11 +97,7 @@ public class UnfPotions extends States {
 				if (Bank.isOpen()) {
 					if (Inventory.contains(sv.yourPot.getUnfName())) {
 						Bank.depositAllItems();
-						Sleep.sleepUntil(new Condition() {
-							public boolean verify() {
-								return Inventory.isEmpty();
-							}
-						}, 1200);
+						Sleep.sleepUntil(Inventory::isEmpty, 1200);
 						returnThis = 100;
 					} else {
 						if (Inventory.isEmpty()) {
@@ -134,11 +116,9 @@ public class UnfPotions extends States {
 								returnThis = 600;
 							} else {
 								Logger.log("You don't have any vials of water!");
-								returnThis = -1;
 							}
 						} else {
 							Logger.log("Something went wrong");
-							returnThis = -1;
 						}
 					}
 				} else {
@@ -148,11 +128,7 @@ public class UnfPotions extends States {
 					}
 					Bank.open();
 					Logger.log("Waiting for bank to open");
-					Sleep.sleepUntil(new Condition() {
-						public boolean verify() {
-							return Bank.isOpen();
-						}
-					}, Calculations.random(1200, 1500));
+					Sleep.sleepUntil(Bank::isOpen, Calculations.random(1200, 1500));
 
 					returnThis = 200;
 				}
@@ -161,7 +137,7 @@ public class UnfPotions extends States {
 		return returnThis;
 	}
 
-	private boolean amIAnimating() throws InterruptedException {
+	private boolean amIAnimating() {
 		for (int i = 0; i < 50; i++) {
 			if (Players.getLocal().getAnimation() != -1)
 				return true;

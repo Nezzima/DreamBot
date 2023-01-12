@@ -18,39 +18,44 @@ public abstract class States {
 	public ScriptVars sv;
 	public String[] states;
 	public String state;
-	public List<PricedItem> lootList = new ArrayList<PricedItem>();
+	public List<PricedItem> lootList = new ArrayList<>();
+
 	public abstract String getMode();
+
 	public abstract int execute() throws InterruptedException;
-	public void draw(Graphics g){
+
+	public void draw(Graphics g) {
 		int baseY = 45;
 		g.drawString("Mode: " + getMode(), 10, baseY);
-		baseY+=15;
+		baseY += 15;
 		g.drawString("Current state: " + getCurrentState(), 10, baseY);
-		baseY+=15;
+		baseY += 15;
 		g.drawString("Experience(p/h): " + SkillTracker.getGainedExperience(Skill.HERBLORE) + "(" + SkillTracker.getGainedExperiencePerHour(Skill.HERBLORE) + ")", 10, baseY);
-		baseY+=15;
+		baseY += 15;
 		g.drawString("Level(gained): " + Skills.getRealLevel(Skill.HERBLORE) + "(" + SkillTracker.getGainedLevels(Skill.HERBLORE) + ")", 10, baseY);
-		baseY+=15;
-		for(PricedItem pi : lootList){
-			if(pi != null && pi.getAmount() > 0){
+		baseY += 15;
+		for (PricedItem pi : lootList) {
+			if (pi != null && pi.getAmount() > 0) {
 				g.drawString(pi.getName() + ": " + pi.getAmount(), 10, baseY);
-				baseY+=15;
+				baseY += 15;
 			}
 		}
 	}
-	
-	public String getCurrentState(){
+
+	public String getCurrentState() {
 		return this.state;
 	}
+
 	public abstract String getState();
-	public void updateLoot(){
-		for(PricedItem pi : lootList){
-			if(pi != null)
+
+	public void updateLoot() {
+		for (PricedItem pi : lootList) {
+			if (pi != null)
 				pi.update();
 		}
 	}
-	
-	public List<PricedItem> getLootList(){
+
+	public List<PricedItem> getLootList() {
 		return this.lootList;
 	}
 }

@@ -16,7 +16,7 @@ import javax.swing.JTextField;
 public class tutIslandGui extends JFrame {
 
 	/**
-	 * 
+	 *
 	 */
 	private static final long serialVersionUID = 1L;
 	private JPanel contentPane;
@@ -37,30 +37,30 @@ public class tutIslandGui extends JFrame {
 		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
 		setContentPane(contentPane);
 		contentPane.setLayout(null);
-		
+
 		JPanel panel = new JPanel();
 		panel.setBounds(0, 0, 270, 101);
 		contentPane.add(panel);
 		panel.setLayout(null);
-		
+
 		userNameField = new JTextField();
 		userNameField.setText("userName");
 		userNameField.setBounds(10, 11, 86, 20);
 		panel.add(userNameField);
 		userNameField.setColumns(10);
-		
+
 		passwordField = new JTextField();
 		passwordField.setText("smd1234");
 		passwordField.setBounds(106, 11, 86, 20);
 		panel.add(passwordField);
 		passwordField.setColumns(10);
-		
+
 		ageField = new JTextField();
 		ageField.setText("20");
 		ageField.setBounds(202, 11, 58, 20);
 		panel.add(ageField);
 		ageField.setColumns(10);
-		
+
 		JButton btnNewButton = new JButton("Start!");
 		btnNewButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {

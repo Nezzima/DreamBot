@@ -23,7 +23,7 @@ import nezz.dreambot.thiever.enums.Thieving;
 public class thieverGui extends JFrame {
 
 	/**
-	 * 
+	 *
 	 */
 	private static final long serialVersionUID = 1L;
 	private JPanel contentPane;
@@ -43,28 +43,28 @@ public class thieverGui extends JFrame {
 		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
 		setContentPane(contentPane);
 		contentPane.setLayout(null);
-		
+
 		JPanel panel = new JPanel();
 		panel.setBounds(0, 0, 270, 101);
 		contentPane.add(panel);
 		panel.setLayout(null);
-		
+
 		JLabel lblYourThieving = new JLabel("Your Thieving:");
 		lblYourThieving.setBounds(10, 11, 72, 14);
 		panel.add(lblYourThieving);
-		
+
 		comboBox.setModel(new DefaultComboBoxModel<Thieving>(Thieving.values()));
 		comboBox.setBounds(92, 8, 168, 20);
 		panel.add(comboBox);
-		
+
 		JLabel lblYourBank = new JLabel("Your Bank:");
 		lblYourBank.setBounds(10, 36, 72, 14);
 		panel.add(lblYourBank);
-		
+
 		comboBox_1.setModel(new DefaultComboBoxModel<BankLocation>(BankLocation.values()));
 		comboBox_1.setBounds(92, 33, 168, 20);
 		panel.add(comboBox_1);
-		
+
 		JButton btnNewButton = new JButton("Start!");
 		btnNewButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {

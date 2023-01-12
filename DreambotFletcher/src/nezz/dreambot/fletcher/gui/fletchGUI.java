@@ -21,7 +21,7 @@ import java.awt.Color;
 public class fletchGUI extends JFrame {
 
 	/**
-	 * 
+	 *
 	 */
 	private static final long serialVersionUID = 1L;
 	private JPanel contentPane;
@@ -41,27 +41,27 @@ public class fletchGUI extends JFrame {
 		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
 		setContentPane(contentPane);
 		contentPane.setLayout(null);
-		
+
 		JPanel panel = new JPanel();
 		panel.setBounds(0, 0, 270, 101);
 		contentPane.add(panel);
 		panel.setLayout(null);
-		
+
 		JLabel lblYourFish = new JLabel("Fletch:");
 		lblYourFish.setBounds(10, 11, 72, 14);
 		panel.add(lblYourFish);
-		
+
 		comboBox.setModel(new DefaultComboBoxModel<Fletching>(Fletching.values()));
 		comboBox.setBounds(92, 8, 168, 20);
 		panel.add(comboBox);
-		
+
 		chckbxPowerFish.setBounds(92, 35, 97, 23);
 		panel.add(chckbxPowerFish);
-		
+
 		final JCheckBox chckbxProgress = new JCheckBox("Progress");
 		chckbxProgress.setBounds(92, 61, 97, 23);
 		panel.add(chckbxProgress);
-		
+
 		JButton btnNewButton = new JButton("Start!");
 		btnNewButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {

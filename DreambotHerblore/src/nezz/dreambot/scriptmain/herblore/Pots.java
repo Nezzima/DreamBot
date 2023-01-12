@@ -1,6 +1,6 @@
 package nezz.dreambot.scriptmain.herblore;
 
-public enum Pots{
+public enum Pots {
 	//doesn't have Sanfew serum, Guthix balance potion, and Guthix rest tea
 	AttackPotion("Attack potion", 3, 25, "Guam leaf", "Eye of newt"),
 	Antipoison("Antipoison", 5, 37.5, "Marrentill", "Unicorn horn dust"),
@@ -23,93 +23,94 @@ public enum Pots{
 	FishingPotion("Fishing potion", 50, 112.5, "Avantoe", "Snape grass"),
 	SuperEnergyPotion("Super energy", 52, 117.5, "Avantoe", "Mort myre fungus"),
 	ShrinkingPotion("Shrinking potion", 52, 6, "Tarromin", "Shrunk Ogleroot"),
-	HuntingPotion("Hunting potion",53,87.5,"Avantoe", "Ground kebbit teeth"),
-	SuperStrengthPotion("Super strength",55,125, "Kwuarm", "Limpwurt root"),
-	MagicEssencePotion("Magic essence potion",57,130, "Starflower", "Crushed gorak claw"),
-	WeaponPoison("Weapon poison",60,137.5, "Kwuarm", "Dragon scale dust"),
-	SuperRestorePotion("Super restore",63,142.5, "Snapdragon", "Red spiders' eggs"),
-	SuperDefencePotion("Super defence",66,150, "Cadantine", "White berries"),
-	ExtraStrongAntiPoisonPotion("Extra strong antipoison potion",68,155, "Toadflax", "Yew roots"),
-	AntiFirePotion("Anti-fire potion",69,157.5, "Lantadyme", "Dragon scale dust"),
-	RangingPotion("Ranging potion",72,162.5, "Dwarf weed", "Wine of Zamorak"),
-	ExtraStrongWeaponPoison("Extra strong weapon poison",73,165, "Coconut milk", "Cactus spine"),//and Red spiders' eggs
-	MagicPotion("Magic potion",76,172.5, "Lantadyme", "Potato cactus"),
-	ZamorakPotion("Zamorak potion",78,175, "Torstol", "Jangerberries"),
-	SuperStrongAntipoisonPotion("Super strong antipoison potion",79,177.5, "Coconut milk", "Magic roots"), //ingredient 1 also includes Irit leaf
-	SaradominBrew("Saradomin brew",81,180, "Toadflax", "Crushed bird's nest"),
+	HuntingPotion("Hunting potion", 53, 87.5, "Avantoe", "Ground kebbit teeth"),
+	SuperStrengthPotion("Super strength", 55, 125, "Kwuarm", "Limpwurt root"),
+	MagicEssencePotion("Magic essence potion", 57, 130, "Starflower", "Crushed gorak claw"),
+	WeaponPoison("Weapon poison", 60, 137.5, "Kwuarm", "Dragon scale dust"),
+	SuperRestorePotion("Super restore", 63, 142.5, "Snapdragon", "Red spiders' eggs"),
+	SuperDefencePotion("Super defence", 66, 150, "Cadantine", "White berries"),
+	ExtraStrongAntiPoisonPotion("Extra strong antipoison potion", 68, 155, "Toadflax", "Yew roots"),
+	AntiFirePotion("Anti-fire potion", 69, 157.5, "Lantadyme", "Dragon scale dust"),
+	RangingPotion("Ranging potion", 72, 162.5, "Dwarf weed", "Wine of Zamorak"),
+	ExtraStrongWeaponPoison("Extra strong weapon poison", 73, 165, "Coconut milk", "Cactus spine"),//and Red spiders' eggs
+	MagicPotion("Magic potion", 76, 172.5, "Lantadyme", "Potato cactus"),
+	ZamorakPotion("Zamorak potion", 78, 175, "Torstol", "Jangerberries"),
+	SuperStrongAntipoisonPotion("Super strong antipoison potion", 79, 177.5, "Coconut milk", "Magic roots"), //ingredient 1 also includes Irit leaf
+	SaradominBrew("Saradomin brew", 81, 180, "Toadflax", "Crushed bird's nest"),
 	SuperStrongWeaponPoison("Super strong weapon poison", 82, 190, "Coconut milk", "Nightshade"),//also includes Poison ivy berries in ingredient 2
 	ExtendedAntifire("Extended antifire", 69, 110, "Antifire potion", "Lava scale shard");
-	
-	public String name;
-	int level;
-	double experience;
-	String ingredientOne;
-	String ingredientTwo;
-	
-	public String getName(){
+
+	public final String name;
+	final int level;
+	final double experience;
+	final String ingredientOne;
+	final String ingredientTwo;
+
+	public String getName() {
 		return this.name;
 	}
-	
-	public int getLevel(){
+
+	public int getLevel() {
 		return this.level;
 	}
-	
-	public double getExperience(){
+
+	public double getExperience() {
 		return this.experience;
 	}
-	
-	public String getIngredientOne(){
+
+	public String getIngredientOne() {
 		return this.ingredientOne;
 	}
-	
-	public String getIngredientTwo(){
+
+	public String getIngredientTwo() {
 		return this.ingredientTwo;
 	}
-	
-	Pots(String name, int level, double experience, String ingredientOne, String ingredientTwo){
+
+	Pots(String name, int level, double experience, String ingredientOne, String ingredientTwo) {
 		this.name = name;
 		this.level = level;
 		this.experience = experience;
 		this.ingredientOne = ingredientOne;
 		this.ingredientTwo = ingredientTwo;
 	}
-	
-	public static String returnIngredientOne(int index){
-		for(Pots p: Pots.values()){
-			if(p.ordinal() == index){
+
+	public static String returnIngredientOne(int index) {
+		for (Pots p : Pots.values()) {
+			if (p.ordinal() == index) {
 				return p.getIngredientOne();
 			}
 		}
 		return null;
 	}
-	
-	public static String returnIngredientTwo(int index){
-		for(Pots p: Pots.values()){
-			if(p.ordinal() == index){
+
+	public static String returnIngredientTwo(int index) {
+		for (Pots p : Pots.values()) {
+			if (p.ordinal() == index) {
 				return p.getIngredientTwo();
 			}
 		}
 		return null;
 	}
-	
-	public static int returnLvlReq(int index){
-		for(Pots p: Pots.values()){
-			if(p.ordinal() == index){
+
+	public static int returnLvlReq(int index) {
+		for (Pots p : Pots.values()) {
+			if (p.ordinal() == index) {
 				return p.getLevel();
 			}
 		}
 		return 0;
 	}
-	
-	public static double returnXPGained(int index){
-		for(Pots p: Pots.values()){
-			if(p.ordinal() == index){
+
+	public static double returnXPGained(int index) {
+		for (Pots p : Pots.values()) {
+			if (p.ordinal() == index) {
 				return p.getExperience();
 			}
 		}
 		return 0;
 	}
-	public String getUnfName(){
+
+	public String getUnfName() {
 		String first = getIngredientOne().split(" ")[0];
 		return first + " potion (unf)";
 	}

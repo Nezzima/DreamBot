@@ -1,16 +1,11 @@
 package nezz.dreambot.scriptmain.hunter;
 
-import java.awt.Graphics2D;
-import java.util.List;
-
 import nezz.dreambot.scriptmain.hunter.gui.ScriptVars;
 import nezz.dreambot.scriptmain.hunter.gui.hunterGui;
 import nezz.dreambot.tools.PricedItem;
-
 import org.dreambot.api.Client;
 import org.dreambot.api.methods.Calculations;
 import org.dreambot.api.methods.container.impl.Inventory;
-import org.dreambot.api.methods.filter.Filter;
 import org.dreambot.api.methods.interactive.GameObjects;
 import org.dreambot.api.methods.interactive.Players;
 import org.dreambot.api.methods.item.GroundItems;
@@ -24,16 +19,17 @@ import org.dreambot.api.script.Category;
 import org.dreambot.api.script.ScriptManifest;
 import org.dreambot.api.utilities.Sleep;
 import org.dreambot.api.utilities.Timer;
-import org.dreambot.api.utilities.impl.Condition;
 import org.dreambot.api.wrappers.interactive.GameObject;
 import org.dreambot.api.wrappers.items.GroundItem;
 import org.dreambot.api.wrappers.items.Item;
+
+import java.awt.*;
+import java.util.List;
 
 @ScriptManifest(author = "Nezz", description = "Catches stuff", name = "DreamBot Hunter", version = 0, category = Category.HUNTING)
 public class Hunter extends AbstractScript {
 
 	PricedItem track;
-	private Tile startTile = null;
 	ScriptVars sv = new ScriptVars();
 
 	public void onStart() {
@@ -43,9 +39,9 @@ public class Hunter extends AbstractScript {
 			sleep(200);
 		}
 		track = new PricedItem(sv.huntThis.getTrackItem(), false);
-		startTile = Players.getLocal().getTile();
+		Tile startTile = Players.getLocal().getTile();
 		sv.trapTiles = new Tile[getTrapAmount()];
-		getTileArray(getTrapAmount(), startTile);
+		getTileArray(getTrapAmount());
 		SkillTracker.start(Skill.HUNTER);
 		startingLevel = Skills.getRealLevel(Skill.HUNTER);
 		rt = new Timer();
@@ -72,7 +68,7 @@ public class Hunter extends AbstractScript {
 		return amount;
 	}
 
-	private void getTileArray(int traps, Tile startTile) {
+	private void getTileArray(int traps) {
 		Tile p = Players.getLocal().getTile();
 		switch (traps) {
 			case 1:
@@ -109,22 +105,6 @@ public class Hunter extends AbstractScript {
 	private int startingLevel = 0;
 
 	private State state;
-
-	Filter<GameObject> brokenSnareFilter = new Filter<GameObject>() {
-		public boolean match(GameObject r) {
-			if (r == null || r.getID() != sv.huntThis.getBrokenTrapID())
-				return false;
-			return true;
-		}
-	};
-
-	Filter<GameObject> fullSnareFilter = new Filter<GameObject>() {
-		public boolean match(GameObject r) {
-			if (r == null || r.getID() != sv.huntThis.getFullTrapID())
-				return false;
-			return true;
-		}
-	};
 
 	private enum State {
 		LAY_TRAP, PICK_TRAP, EMPTY_TRAP, SLEEP, DROP
@@ -178,7 +158,7 @@ public class Hunter extends AbstractScript {
 			return -1;
 		} else if (getTrapAmount() > sv.trapTiles.length) {
 			sv.trapTiles = new Tile[getTrapAmount()];
-			getTileArray(getTrapAmount(), startTile);
+			getTileArray(getTrapAmount());
 		}
 		state = getState();
 		switch (state) {
@@ -186,11 +166,7 @@ public class Hunter extends AbstractScript {
 				if (standingOnTrap()) {
 					final Tile t = new Tile(Players.getLocal().getX(), Players.getLocal().getY() - 1, Players.getLocal().getZ());
 					Map.interact(t, "Walk here");
-					Sleep.sleepUntil(new Condition() {
-						public boolean verify() {
-							return Players.getLocal().getTile().equals(t) && !Players.getLocal().isMoving();
-						}
-					}, 5000);
+					Sleep.sleepUntil(() -> Players.getLocal().getTile().equals(t) && !Players.getLocal().isMoving(), 5000);
 				} else {
 					for (int i = 0; i < sv.huntThis.getDropItems().length; i++) {
 						if (Inventory.contains(sv.huntThis.getDropItems()[i])) {
@@ -228,18 +204,10 @@ public class Hunter extends AbstractScript {
 					if (!Players.getLocal().getTile().equals(nextPos)) {
 						Tile t = Client.getDestination();
 						if (t != null && t.equals(nextPos)) {
-							Sleep.sleepUntil(new Condition() {
-								public boolean verify() {
-									return Players.getLocal().getTile().equals(nextPos);
-								}
-							}, 1200);
+							Sleep.sleepUntil(() -> Players.getLocal().getTile().equals(nextPos), 1200);
 						} else {
 							Map.interact(nextPos, "Walk here");
-							Sleep.sleepUntil(new Condition() {
-								public boolean verify() {
-									return Players.getLocal().getTile().equals(nextPos);
-								}
-							}, 1200);
+							Sleep.sleepUntil(() -> Players.getLocal().getTile().equals(nextPos), 1200);
 						}
 					} else {
 						Item trap = Inventory.get(sv.huntThis.getTrapName());
@@ -260,11 +228,7 @@ public class Hunter extends AbstractScript {
 				final GroundItem yourTrap = GroundItems.closest(sv.huntThis.getTrapName());
 				if (yourTrap != null) {
 					yourTrap.interact("Take");
-					Sleep.sleepUntil(new Condition() {
-						public boolean verify() {
-							return !trapOnTile(yourTrap.getTile());
-						}
-					}, 1200);
+					Sleep.sleepUntil(() -> !trapOnTile(yourTrap.getTile()), 1200);
 				}
 				break;
 			case SLEEP:
@@ -272,11 +236,7 @@ public class Hunter extends AbstractScript {
 				if (standingOnTrap()) {
 					final Tile t = new Tile(Players.getLocal().getX(), Players.getLocal().getY() - 1, Players.getLocal().getZ());
 					Map.interact(t, "Walk here");
-					Sleep.sleepUntil(new Condition() {
-						public boolean verify() {
-							return Players.getLocal().getTile().equals(t);
-						}
-					}, 1200);
+					Sleep.sleepUntil(() -> Players.getLocal().getTile().equals(t), 1200);
 					sleep(Calculations.random(300, 800));
 				}
 				break;
@@ -296,12 +256,10 @@ public class Hunter extends AbstractScript {
 		for (int i = 0; i < sv.trapTiles.length; i++) {
 			final Tile yourPos = sv.trapTiles[i];
 			if (posContainsBrokenTrap(yourPos)) {
-				return GameObjects.closest(new Filter<GameObject>() {
-					public boolean match(GameObject r) {
-						if (r == null || r.getID() != sv.huntThis.getBrokenTrapID())
-							return false;
-						return r.getTile().equals(yourPos);
-					}
+				return GameObjects.closest(r -> {
+					if (r == null || r.getID() != sv.huntThis.getBrokenTrapID())
+						return false;
+					return r.getTile().equals(yourPos);
 				});
 			}
 
@@ -313,12 +271,10 @@ public class Hunter extends AbstractScript {
 		for (int i = 0; i < sv.trapTiles.length; i++) {
 			final Tile yourPos = sv.trapTiles[i];
 			if (posContainsFullTrap(yourPos)) {
-				return GameObjects.closest(new Filter<GameObject>() {
-					public boolean match(GameObject r) {
-						if (r == null || r.getID() != sv.huntThis.getFullTrapID())
-							return false;
-						return r.getTile().equals(yourPos);
-					}
+				return GameObjects.closest(r -> {
+					if (r == null || r.getID() != sv.huntThis.getFullTrapID())
+						return false;
+					return r.getTile().equals(yourPos);
 				});
 			}
 
@@ -336,13 +292,10 @@ public class Hunter extends AbstractScript {
 	}
 
 	private boolean posContainsBrokenTrap(final Tile p) {
-		GameObject currTrap = GameObjects.closest(new Filter<GameObject>() {
-			@Override
-			public boolean match(GameObject r) {
-				if (r.getName() == null || r.getID() != sv.huntThis.getBrokenTrapID())
-					return false;
-				return r.getTile().equals(p);
-			}
+		GameObject currTrap = GameObjects.closest(r -> {
+			if (r.getName() == null || r.getID() != sv.huntThis.getBrokenTrapID())
+				return false;
+			return r.getTile().equals(p);
 		});
 		return currTrap != null;
 	}
@@ -357,13 +310,10 @@ public class Hunter extends AbstractScript {
 	}
 
 	private boolean posContainsFullTrap(final Tile p) {
-		GameObject currTrap = GameObjects.closest(new Filter<GameObject>() {
-			@Override
-			public boolean match(GameObject r) {
-				if (r.getName() == null || r.getID() != sv.huntThis.getFullTrapID())
-					return false;
-				return r.getTile().equals(p);
-			}
+		GameObject currTrap = GameObjects.closest(r -> {
+			if (r.getName() == null || r.getID() != sv.huntThis.getFullTrapID())
+				return false;
+			return r.getTile().equals(p);
 		});
 		return currTrap != null;
 	}
@@ -382,13 +332,10 @@ public class Hunter extends AbstractScript {
 	}
 
 	private boolean posContainsTrap(final Tile p) {
-		GameObject currTrap = GameObjects.closest(new Filter<GameObject>() {
-			@Override
-			public boolean match(GameObject r) {
-				if (r.getName() == null || !r.getName().equals(sv.huntThis.getTrapName()))
-					return false;
-				return r.getTile().equals(p);
-			}
+		GameObject currTrap = GameObjects.closest(r -> {
+			if (r.getName() == null || !r.getName().equals(sv.huntThis.getTrapName()))
+				return false;
+			return r.getTile().equals(p);
 		});
 		return currTrap != null;
 	}
@@ -403,7 +350,7 @@ public class Hunter extends AbstractScript {
 		if (sv.started) {
 			track.update();
 			if (state != null)
-				g.drawString("State: " + state.toString(), 5, 50);
+				g.drawString("State: " + state, 5, 50);
 			g.drawString("Exp gained(p/h): " + SkillTracker.getGainedExperience(Skill.HUNTER) + "(" + SkillTracker.getGainedExperiencePerHour(Skill.HUNTER) + ")", 5, 65);
 			g.drawString("Level: " + Skills.getRealLevel(Skill.HUNTER) + "(" + (Skills.getRealLevel(Skill.HUNTER) - startingLevel) + ")", 5, 80);
 			g.drawString("Runtime: " + rt.formatTime(), 5, 95);

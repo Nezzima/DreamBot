@@ -18,11 +18,11 @@ import java.awt.Color;
 public class buyerGui extends JFrame {
 
 	/**
-	 * 
+	 *
 	 */
 	private static final long serialVersionUID = 1L;
 	private JPanel contentPane;
-	
+
 	private JTextField txtItemName;
 	private JTextField txtShopName;
 	JCheckBox chckbxHopWorlds = new JCheckBox("hop worlds");
@@ -41,63 +41,63 @@ public class buyerGui extends JFrame {
 		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
 		setContentPane(contentPane);
 		contentPane.setLayout(null);
-		
+
 		JPanel panel = new JPanel();
 		panel.setBounds(0, 0, 270, 163);
 		contentPane.add(panel);
 		panel.setLayout(null);
-		
+
 		JLabel lblItemName = new JLabel("Item Name:");
 		lblItemName.setBounds(0, 11, 93, 14);
 		panel.add(lblItemName);
-		
+
 		txtItemName = new JTextField();
 		txtItemName.setText("Iron arrow");
 		txtItemName.setBounds(96, 9, 132, 20);
 		panel.add(txtItemName);
 		txtItemName.setColumns(10);
-		
+
 		txtShopName = new JTextField();
 		txtShopName.setText("Betty");
 		txtShopName.setColumns(10);
 		txtShopName.setBounds(96, 36, 132, 20);
 		panel.add(txtShopName);
-		
+
 		JLabel lblShopName = new JLabel("Shop Identifier:");
 		lblShopName.setBounds(0, 38, 93, 14);
 		panel.add(lblShopName);
-		
+
 		JLabel lblPerItem = new JLabel("f2p:");
 		lblPerItem.setBounds(0, 69, 93, 14);
 		panel.add(lblPerItem);
-		
+
 		JLabel lblHopWorlds = new JLabel("Hop Worlds:");
 		lblHopWorlds.setBounds(0, 94, 73, 14);
 		panel.add(lblHopWorlds);
-		
+
 		chckbxHopWorlds.setBounds(96, 90, 97, 23);
 		panel.add(chckbxHopWorlds);
-		
+
 		JLabel lblMinimumAmt = new JLabel("Minimum Amt:");
 		lblMinimumAmt.setBounds(0, 121, 93, 14);
 		panel.add(lblMinimumAmt);
-		
+
 		txtMinAmt = new JTextField();
 		txtMinAmt.setText("10");
 		txtMinAmt.setBounds(96, 118, 39, 20);
 		panel.add(txtMinAmt);
 		txtMinAmt.setColumns(10);
-		
+
 		final JCheckBox chckbxFpOnly = new JCheckBox("f2p only");
 		chckbxFpOnly.setBounds(96, 63, 97, 23);
 		panel.add(chckbxFpOnly);
-		
+
 		JButton btnNewButton = new JButton("Start!");
 		btnNewButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-				try{
+				try {
 					var.shopId = Integer.parseInt(txtShopName.getText());
-				}catch(Exception e){
+				} catch (Exception e) {
 					var.shopName = txtShopName.getText();
 				}
 				var.itemName = txtItemName.getText();

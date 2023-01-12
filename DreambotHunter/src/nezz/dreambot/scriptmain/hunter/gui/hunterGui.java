@@ -22,7 +22,7 @@ import nezz.dreambot.scriptmain.hunter.Hunt;
 public class hunterGui extends JFrame {
 
 	/**
-	 * 
+	 *
 	 */
 	private static final long serialVersionUID = 1L;
 	private JPanel contentPane;
@@ -42,26 +42,26 @@ public class hunterGui extends JFrame {
 		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
 		setContentPane(contentPane);
 		contentPane.setLayout(null);
-		
+
 		JPanel panel = new JPanel();
 		panel.setBounds(0, 0, 270, 131);
 		contentPane.add(panel);
 		panel.setLayout(null);
-		
+
 		comboBox.setModel(new DefaultComboBoxModel<Hunt>(Hunt.values()));
 		comboBox.setBounds(10, 11, 128, 20);
 		panel.add(comboBox);
-		
+
 		JLabel lblStopAt = new JLabel("Stop at:");
 		lblStopAt.setBounds(10, 42, 54, 14);
 		panel.add(lblStopAt);
-		
+
 		stopAtField = new JTextField();
 		stopAtField.setText("19");
 		stopAtField.setBounds(74, 42, 40, 20);
 		panel.add(stopAtField);
 		stopAtField.setColumns(10);
-		
+
 		JButton btnNewButton = new JButton("Start!");
 		btnNewButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {

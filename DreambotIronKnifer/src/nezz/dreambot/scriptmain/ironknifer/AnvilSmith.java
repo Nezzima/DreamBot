@@ -5,7 +5,6 @@ import org.dreambot.api.methods.input.Keyboard;
 import org.dreambot.api.methods.interactive.GameObjects;
 import org.dreambot.api.methods.widget.Widgets;
 import org.dreambot.api.utilities.Sleep;
-import org.dreambot.api.utilities.impl.Condition;
 import org.dreambot.api.wrappers.interactive.GameObject;
 import org.dreambot.api.wrappers.widgets.WidgetChild;
 
@@ -72,11 +71,7 @@ public class AnvilSmith {
 			return false;
 		else if (getKnifeWidget() != null) {
 			getKnifeWidget().interact("Smith X sets");
-			Sleep.sleepUntil(new Condition() {
-				public boolean verify() {
-					return needToType();
-				}
-			}, 2400);
+			Sleep.sleepUntil(this::needToType, 2400);
 		}
 		return false;
 	}

@@ -1,6 +1,7 @@
 package nezz.dreambot.tools;
 
 import org.dreambot.api.methods.container.impl.Inventory;
+import org.dreambot.api.methods.grandexchange.LivePrices;
 import org.dreambot.api.utilities.Logger;
 
 public class PricedItem {
@@ -20,20 +21,9 @@ public class PricedItem {
 			if (name.contains("arrow"))
 				tempName += "s";
 			Logger.log("Getting price");
-			price = PriceGrab.getInstance().getPrice(tempName, 2);
+			price = LivePrices.get(tempName);
 			Logger.log("Got price: " + price);
 		} else
-			price = 0;
-	}
-
-	public PricedItem(String name, int id, boolean getPrice) {
-		this.name = name;
-		this.setId(id);
-		if (Inventory.contains(id))
-			lastCount = Inventory.count(id);
-		if (getPrice)
-			price = PriceGrab.getInstance().getPrice(name, 2);
-		else
 			price = 0;
 	}
 

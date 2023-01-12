@@ -1,6 +1,7 @@
 package nezz.dreambot.tools;
 
 import org.dreambot.api.methods.container.impl.Inventory;
+import org.dreambot.api.methods.grandexchange.LivePrices;
 import org.dreambot.api.utilities.Logger;
 
 public class PricedItem {
@@ -10,79 +11,52 @@ public class PricedItem {
 	private int price = 0;
 	private int id = 0;
 
-	public PricedItem(String name, boolean getPrice){
+	public PricedItem(String name, boolean getPrice) {
 		this.name = name;
-		if(Inventory.contains(name)){
-			lastCount = (int) Inventory.count(name);
+		if (Inventory.contains(name)) {
+			lastCount = Inventory.count(name);
 		}
-		if(getPrice){
+		if (getPrice) {
 			String tempName = name;
-			if(name.contains("arrow"))
-				tempName+="s";
+			if (name.contains("arrow"))
+				tempName += "s";
 			Logger.log("Getting price");
-			price = PriceGrab.getInstance().getPrice(tempName, 2);
+			price = LivePrices.get(tempName);
 			Logger.log("Got price: " + price);
-		}
-		else
+		} else
 			price = 0;
 	}
 
-	public PricedItem(String name, int id, boolean getPrice){
-		this.name = name;
-		this.setId(id);
-		if(Inventory.contains(id))
-			lastCount = (int) Inventory.count(id);
-		if(getPrice)
-			price = PriceGrab.getInstance().getPrice(name, 2);
-		else
-			price = 0;
-	}
-
-	public void update(){
+	public void update() {
 		int increase = 0;
-		if(id==0)
-			increase =  (int) (Inventory.count(name)- lastCount);
+		if (id == 0)
+			increase = Inventory.count(name) - lastCount;
 		else
-			increase =  (int) (Inventory.count(id)- lastCount);
-		if(increase < 0)
+			increase = Inventory.count(id) - lastCount;
+		if (increase < 0)
 			increase = 0;
-		amount+=increase;
-		if(id==0)
-			lastCount = (int) Inventory.count(name);
+		amount += increase;
+		if (id == 0)
+			lastCount = Inventory.count(name);
 		else
-			lastCount = (int) Inventory.count(id);
+			lastCount = Inventory.count(id);
 	}
 
-	public void setName(String name){
-		this.name = name;
-	}
-	public void setAmount(int amt){
-		this.amount = amt;
-	}
-	public void setPrice(int price){
-		this.price = price;
-	}
-	public String getName(){
+	public String getName() {
 		return name;
 	}
-	public int getAmount(){
+
+	public int getAmount() {
 		return amount;
 	}
 
-	public int getPrice(){
+	public int getPrice() {
 		return price;
 	}
-	public int getValue(){
-		if(amount <= 0)
+
+	public int getValue() {
+		if (amount <= 0)
 			return 0;
 		return amount * price;
-	}
-
-	public int getId() {
-		return id;
-	}
-
-	public void setId(int id) {
-		this.id = id;
 	}
 }

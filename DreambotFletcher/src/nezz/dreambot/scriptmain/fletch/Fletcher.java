@@ -1,11 +1,7 @@
 package nezz.dreambot.scriptmain.fletch;
 
-import java.awt.Graphics;
-import java.awt.Rectangle;
-
 import nezz.dreambot.fletcher.gui.ScriptVars;
 import nezz.dreambot.fletcher.gui.fletchGUI;
-
 import org.dreambot.api.input.Mouse;
 import org.dreambot.api.methods.Calculations;
 import org.dreambot.api.methods.container.impl.Inventory;
@@ -23,10 +19,11 @@ import org.dreambot.api.script.Category;
 import org.dreambot.api.script.ScriptManifest;
 import org.dreambot.api.utilities.Sleep;
 import org.dreambot.api.utilities.Timer;
-import org.dreambot.api.utilities.impl.Condition;
 import org.dreambot.api.wrappers.interactive.GameObject;
 import org.dreambot.api.wrappers.items.Item;
 import org.dreambot.api.wrappers.widgets.WidgetChild;
+
+import java.awt.*;
 
 @ScriptManifest(author = "Nezz", category = Category.FLETCHING, description = "Fletcher", name = "Dreambot Fletcher", version = 0)
 public class Fletcher extends AbstractScript {
@@ -87,11 +84,7 @@ public class Fletcher extends AbstractScript {
 				if (Bank.isOpen()) {
 					if (Inventory.contains(sv.fletch.getName())) {
 						Bank.depositAll(sv.fletch.getName());
-						Sleep.sleepUntil(new Condition() {
-							public boolean verify() {
-								return !Inventory.contains(sv.fletch.getName());
-							}
-						}, 2000);
+						Sleep.sleepUntil(() -> !Inventory.contains(sv.fletch.getName()), 2000);
 						returnThis = Calculations.random(300, 600);
 					} else {
 						if (!Bank.contains(sv.fletch.getLog())) {
@@ -99,20 +92,12 @@ public class Fletcher extends AbstractScript {
 							return -1;
 						}
 						Bank.withdrawAll(sv.fletch.getLog());
-						Sleep.sleepUntil(new Condition() {
-							public boolean verify() {
-								return Inventory.contains(sv.fletch.getLog());
-							}
-						}, 2000);
+						Sleep.sleepUntil(() -> Inventory.contains(sv.fletch.getLog()), 2000);
 						returnThis = Calculations.random(300, 600);
 					}
 				} else {
 					Bank.open();
-					Sleep.sleepUntil(new Condition() {
-						public boolean verify() {
-							return Bank.isOpen();
-						}
-					}, 2000);
+					Sleep.sleepUntil(Bank::isOpen, 2000);
 					returnThis = Calculations.random(300, 600);
 				}
 				break;
@@ -123,11 +108,7 @@ public class Fletcher extends AbstractScript {
 				GameObject tree = GameObjects.closest(sv.fletch.getTree());
 				if (tree != null && tree.exists() && Players.getLocal().getAnimation() == -1) {
 					tree.interact("Chop down");
-					Sleep.sleepUntil(new Condition() {
-						public boolean verify() {
-							return Players.getLocal().getAnimation() != -1;
-						}
-					}, 3500);
+					Sleep.sleepUntil(() -> Players.getLocal().getAnimation() != -1, 3500);
 					returnThis = Calculations.random(300, 600);
 				} else {
 					sleep(300, 600);
@@ -147,11 +128,7 @@ public class Fletcher extends AbstractScript {
 			case FLETCH:
 				if (Bank.isOpen()) {
 					Bank.close();
-					Sleep.sleepUntil(new Condition() {
-						public boolean verify() {
-							return !Bank.isOpen();
-						}
-					}, 1200);
+					Sleep.sleepUntil(() -> !Bank.isOpen(), 1200);
 					return 1;
 				} else if (Players.getLocal().getAnimation() == -1) {
 					if (Inventory.contains("Knife")) {
@@ -172,11 +149,7 @@ public class Fletcher extends AbstractScript {
 							e.printStackTrace();
 						}*/
 							chil.interact("Make X");
-							Sleep.sleepUntil(new Condition() {
-								public boolean verify() {
-									return !par.getChild(sv.fletch.getChild()).isVisible();
-								}
-							}, 2000);
+							Sleep.sleepUntil(() -> !par.getChild(sv.fletch.getChild()).isVisible(), 2000);
 							if (!chil.isVisible()) {
 								int typ = Calculations.random(1, 9);
 								Keyboard.type((Integer.toString(typ) + typ + typ), true);
@@ -187,25 +160,20 @@ public class Fletcher extends AbstractScript {
 							Inventory.interact("Knife", "Use");
 							sleep(345, 654);
 							Rectangle r = Inventory.slotBounds(Inventory.slot(sv.fletch.getLog()));
-							if (r != null) {
-								Mouse.move(r.getLocation());
-								Mouse.click();
-								Sleep.sleepUntil(new Condition() {
-									public boolean verify() {
-										Widget par = Widgets.getWidget(sv.fletch.getParent());
-										WidgetChild chil = null;
-										if (par != null) {
-											chil = par.getChild(sv.fletch.getChild());
-										}
-										return chil != null && chil.isVisible();
-									}
-								}, 2000);
-							}
+							Mouse.move(r.getLocation());
+							Mouse.click();
+							Sleep.sleepUntil(() -> {
+								Widget par1 = Widgets.getWidget(sv.fletch.getParent());
+								WidgetChild chil1 = null;
+								if (par1 != null) {
+									chil1 = par1.getChild(sv.fletch.getChild());
+								}
+								return chil1 != null && chil1.isVisible();
+							}, 2000);
 							returnThis = Calculations.random(300, 600);
 						}
 					} else {
 						log("No knife!?");
-						returnThis = -1;
 					}
 				} else {
 					returnThis = Calculations.random(300, 600);
