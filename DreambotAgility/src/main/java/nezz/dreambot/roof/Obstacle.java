@@ -24,6 +24,13 @@ public class Obstacle {
 			return false;
 		}
 		GameObject obj = GameObjects.closest(f->f.getName().equalsIgnoreCase(name) && f.hasAction(action), start != null ? start : Players.getLocal().getTile());
-		return obj != null && obj.interact(action);
+		if(obj == null){
+			return false;
+		}
+		if(obj.distance() > 5){
+			Walking.walk(obj);
+			Sleep.sleepUntil(()->obj.distance() <= 5, ()->Players.getLocal().isMoving(), 2000, 100);
+		}
+		return obj.interact(action);
 	}
 }

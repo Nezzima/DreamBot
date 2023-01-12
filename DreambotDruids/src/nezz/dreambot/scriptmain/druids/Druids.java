@@ -57,26 +57,26 @@ public class Druids extends AbstractScript {
 		}
 		return true;
 	};
-	Filter<GroundItem> itemFilter = new Filter<>() {
-		public boolean match(GroundItem gi) {
-			if (gi == null || !gi.exists() || gi.getName() == null) {
-				return false;
-			}
-			if (!druidArea.contains(gi)) {
-				return false;
-			}
-			for (int i = 0; i < sv.loot.length; i++) {
-				if (gi.getName().contains("Grimy")) {
-					for (int ii = 0; ii < sv.keepHerbs.length; ii++) {
-						if (gi.getID() == sv.keepHerbs[ii])
-							return true;
-					}
-					return false;
-				} else if (gi.getName().equals(sv.loot[i]))
-					return true;
-			}
+	Area druidArea = new Area(new Tile(2560, 3358, 0), new Tile(2564, 3354, 0));
+
+	Filter<GroundItem> itemFilter = gi -> {
+		if (gi == null || !gi.exists() || gi.getName() == null) {
 			return false;
 		}
+		if (!druidArea.contains(gi)) {
+			return false;
+		}
+		for (int i = 0; i < sv.loot.length; i++) {
+			if (gi.getName().contains("Grimy")) {
+				for (int ii = 0; ii < sv.keepHerbs.length; ii++) {
+					if (gi.getID() == sv.keepHerbs[ii])
+						return true;
+				}
+				return false;
+			} else if (gi.getName().equals(sv.loot[i]))
+				return true;
+		}
+		return false;
 	};
 	Condition itemDeposited = Inventory::isEmpty;
 	Condition attacking = () -> Players.getLocal().isInCombat();
@@ -102,7 +102,6 @@ public class Druids extends AbstractScript {
 			new Tile(2615,3338,0),new Tile(2616,3337,0),new Tile(2616,3335,0),
 			new Tile(2617,3334,0)};*/
 
-	Area druidArea = new Area(new Tile(2560, 3358, 0), new Tile(2564, 3354, 0));
 	List<PricedItem> lootTrack = new ArrayList<>();
 	GameObject door = null;
 	private boolean started = false;

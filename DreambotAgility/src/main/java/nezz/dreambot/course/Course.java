@@ -8,6 +8,7 @@ import org.dreambot.api.methods.map.Map;
 import org.dreambot.api.methods.map.Tile;
 import org.dreambot.api.methods.walking.impl.Walking;
 import org.dreambot.api.script.frameworks.treebranch.Branch;
+import org.dreambot.api.utilities.Logger;
 import org.dreambot.api.utilities.Sleep;
 
 import java.util.List;
@@ -37,6 +38,7 @@ public abstract class Course extends Branch {
 		}
 		else{
 			if(startObs.traverse()){
+				Sleep.sleepUntil(()->getRoofs().get(0).getArea().contains(Players.getLocal().getTile()) && !Players.getLocal().isMoving() && !Players.getLocal().isAnimating(), ()->Players.getLocal().isMoving() || Players.getLocal().isAnimating(), 3000,150);
 				return Calculations.random(400,700);
 			}
 		}
@@ -50,29 +52,32 @@ public abstract class Course extends Branch {
 	private int currentIndex = -1;
 
 	public Roof getCurrent(){
-		int ind = 0;
-		for(Roof roof : getRoofs()){
+		Logger.debug("Current index; " + currentIndex);
+		for(int i = Math.max(currentIndex, 0); i < getRoofs().size(); i++){
+			Roof roof = getRoofs().get(i);
 			if(roof.getArea().contains(Players.getLocal().getTile())){
-				currentIndex = ind;
+				currentIndex = i;
 				return roof;
 			}
-			ind++;
+		}
+		if(currentIndex >= 0 && Players.getLocal().getTile().getZ() > 0){
+			//we shouldn't reset
+			return getRoofs().get(currentIndex);
 		}
 		currentIndex = -1;
 		return null;
 	}
 	public Roof getNext(){
-		if(currentIndex < 0){
-			return getRoofs().get(0);
-		}
 		if(currentIndex >= getRoofs().size()-1){
 			return null;
 		}
 		return getRoofs().get(currentIndex+1);
 	}
 
-	public int execute(){
+	@Override
+	public int onLoop(){
 		if(needsStart()){
+			Logger.debug("Starting course!");
 			return start();
 		}
 		Roof curr = getCurrent();
