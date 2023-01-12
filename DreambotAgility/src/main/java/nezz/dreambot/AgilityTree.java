@@ -21,7 +21,7 @@ public class AgilityTree extends TreeScript implements PaintListener {
 	@Override
 	public void onStart() {
 		addBranches(
-//				new AlKharid(),
+				new AlKharid(),
 				new Draynor());
 	}
 
